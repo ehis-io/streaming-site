@@ -27,8 +27,8 @@ export class ProvidersService {
     const cacheKey = `streams:${id}:${season || ''}:${episode || ''}`;
     const cached = await this.cacheManager.get<StreamLink[]>(cacheKey);
     if (cached) {
-        this.logger.log(`Returned cached streams for ${cacheKey}`);
-        return cached;
+      this.logger.log(`Returned cached streams for ${cacheKey}`);
+      return cached;
     }
 
     const tmdbId = parseInt(id);
@@ -37,8 +37,9 @@ export class ProvidersService {
     const type = (season && episode) ? 'tv' : 'movie';
     let title = '';
 
+    let details: any;
     try {
-      const details = await this.tmdbService.getDetails(tmdbId, type);
+      details = await this.tmdbService.getDetails(tmdbId, type);
       title = type === 'movie' ? details.title : details.name;
     } catch (e) {
       this.logger.error(`Failed to fetch metadata for ${id}: ${e.message}`);
@@ -46,17 +47,28 @@ export class ProvidersService {
     }
 
     this.logger.log(`Resolving streams for ${title} (${type})`);
-    
+
     const allLinks: StreamLink[] = [];
     const promises = this.scrapers.map(async (scraper) => {
       try {
-        const results = await scraper.search(title, tmdbId);
-        if (results.length > 0) {
-           // Basic matching: use first result. Improve matching logic later.
-           const match = results[0];
-           const links = await scraper.getStreamLinks(match.url, season && episode ? { season, episode } : undefined);
-           return links.map(l => ({ ...l, provider: scraper.name }));
-        }
+        const imdbId = details.external_ids?.imdb_id || details.imdb_id;
+        const searchResults = await scraper.search(title, tmdbId, imdbId);
+
+        const scraperLinksPromises = searchResults.map(async (result) => {
+          try {
+            const links = await scraper.getStreamLinks(result.url, season && episode ? { season, episode } : undefined);
+            return links.map(l => ({
+              ...l,
+              provider: result.title.includes('(') ? result.title : `${scraper.name} (${new URL(result.url).hostname})`
+            }));
+          } catch (e) {
+            this.logger.warn(`${scraper.name} mirror ${result.url} failed: ${e.message}`);
+            return [];
+          }
+        });
+
+        const nestedResults = await Promise.all(scraperLinksPromises);
+        return nestedResults.flat();
       } catch (e) {
         this.logger.warn(`${scraper.name} failed: ${e.message}`);
       }
@@ -65,11 +77,11 @@ export class ProvidersService {
 
     const scraperResults = await Promise.all(promises);
     scraperResults.forEach(res => {
-        if (res) allLinks.push(...res);
+      if (res) allLinks.push(...res);
     });
 
     if (allLinks.length > 0) {
-        await this.cacheManager.set(cacheKey, allLinks, 7200000); // 2 hours
+      await this.cacheManager.set(cacheKey, allLinks, 7200000); // 2 hours
     }
 
     return allLinks;

@@ -4,60 +4,61 @@ import { Scraper, ScraperSearchResult, StreamLink } from '../scraper.interface';
 @Injectable()
 export class VidSrcScraper implements Scraper {
   name = 'VidSrc';
-  priority = 8;
+  priority = 10;
   private readonly logger = new Logger(VidSrcScraper.name);
-  private readonly baseUrl = 'https://vidsrc.xyz/embed';
-  private readonly apiUrl = 'https://vidsrc.to/embed';
+  private readonly baseUrls = [
+    'https://vidsrc-embed.ru',
+    'https://vidsrc-embed.su',
+    'https://vidsrcme.su',
+    'https://vsrc.su'
+  ];
 
-  async search(query: string, tmdbId?: number): Promise<ScraperSearchResult[]> {
-    // VidSrc works with TMDB IDs, so if we have one, use it
-    if (!tmdbId) {
-      this.logger.warn('VidSrc requires TMDB ID, cannot search by title alone');
+  async search(query: string, tmdbId?: number, imdbId?: string): Promise<ScraperSearchResult[]> {
+    // VidSrc-embed.ru works with both TMDB and IMDB IDs
+    // Example: https://vidsrc-embed.ru/embed/movie?imdb=tt36741457
+
+    if (!imdbId && !tmdbId) {
+      this.logger.warn('VidSrc requires IMDB or TMDB ID, cannot search by title alone');
       return [];
     }
 
-    // We'll determine type based on context - for now assume movie
-    // The ProvidersService will call this with the correct type context
-    const movieUrl = `${this.apiUrl}/movie/${tmdbId}`;
-    
-    return [{
-      title: query,
-      url: movieUrl,
+    const type = 'movie'; // Default to movie, getStreamLinks will adjust if it's TV
+    const idParam = imdbId ? `imdb=${imdbId}` : `tmdb=${tmdbId}`;
+
+    return this.baseUrls.map(baseUrl => ({
+      title: `${query} (${new URL(baseUrl).hostname})`,
+      url: `${baseUrl}/embed/${type}?${idParam}`,
       poster: ''
-    }];
+    }));
   }
 
   async getStreamLinks(url: string, episode?: { season: number, episode: number }): Promise<StreamLink[]> {
     this.logger.log(`Fetching stream from ${url}`);
-    
+
     try {
-      // Construct the proper embed URL
       let embedUrl = url;
-      
-      // If it's a TV show with episode info, modify the URL
-      if (episode && url.includes('/movie/')) {
-        // Convert movie URL to TV URL with season/episode
-        const tmdbId = url.split('/movie/')[1];
-        embedUrl = `${this.apiUrl}/tv/${tmdbId}/${episode.season}/${episode.episode}`;
-      } else if (episode && url.includes('/tv/')) {
-        // Already a TV URL, append season/episode if not present
-        if (!url.includes(`/${episode.season}/${episode.episode}`)) {
-          const tmdbId = url.split('/tv/')[1].split('/')[0];
-          embedUrl = `${this.apiUrl}/tv/${tmdbId}/${episode.season}/${episode.episode}`;
+      const urlObj = new URL(url);
+      const domain = `${urlObj.protocol}//${urlObj.hostname}`;
+
+      // Handle TV show episode information
+      if (episode) {
+        if (url.includes('/movie?')) {
+          embedUrl = url.replace('/movie?', '/tv?');
         }
+
+        const operator = embedUrl.includes('?') ? '&' : '?';
+        embedUrl = `${embedUrl}${operator}season=${episode.season}&episode=${episode.episode}`;
       }
 
       this.logger.log(`VidSrc embed URL: ${embedUrl}`);
 
-      // VidSrc.to embed pages handle streaming internally
-      // Return the embed URL directly as an iframe source
       return [{
         url: embedUrl,
         quality: '1080p',
-        isM3U8: false, // This is an embed URL, not a direct stream
-        headers: { 
-          'Referer': 'https://vidsrc.to/',
-          'Origin': 'https://vidsrc.to'
+        isM3U8: false,
+        headers: {
+          'Referer': `${domain}/`,
+          'Origin': domain
         }
       }];
 
