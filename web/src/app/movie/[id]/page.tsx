@@ -29,16 +29,44 @@ export default function MovieDetail({ params: paramsPromise }: { params: Promise
     const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
 
     useEffect(() => {
+        // Fetch movie details
         fetch(`http://localhost:4001/api/v1/movies/${params.id}`)
             .then(res => res.json())
             .then(data => {
                 setMovie(data);
-                if (data.localProviders?.length > 0) {
+                // Initial providers from DB
+                if (data.localProviders?.length > 0 && !selectedProvider) {
                     setSelectedProvider(data.localProviders[0]);
                 }
             })
-            .catch(err => console.error(err));
-    }, [params.id]);
+            .catch(err => console.error('Movie fetch error:', err));
+
+        // Fetch dynamic streams
+        fetch(`http://localhost:4001/api/v1/streams/${params.id}`)
+            .then(res => res.json())
+            .then((links: any[]) => {
+                setMovie(prev => {
+                    if (!prev) return prev;
+
+                    const dynamicProviders = links.map((link, index) => ({
+                        id: `dynamic-${index}`,
+                        name: link.provider,
+                        embedUrl: link.url
+                    }));
+
+                    // Combine local and dynamic providers, avoiding duplicates if possible
+                    const combined = [...(prev.localProviders || []), ...dynamicProviders];
+
+                    // Auto-select first dynamic provider if no local one was selected
+                    if (dynamicProviders.length > 0 && (!selectedProvider || selectedProvider.id.startsWith('dynamic-'))) {
+                        setSelectedProvider(dynamicProviders[0]);
+                    }
+
+                    return { ...prev, localProviders: combined };
+                });
+            })
+            .catch(err => console.error('Streams fetch error:', err));
+    }, [params.id, selectedProvider]);
 
     if (!movie) return <div className={styles.loading}>Loading...</div>;
 
