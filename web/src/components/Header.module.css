@@ -1,0 +1,66 @@
+.header {
+    height: 70px;
+    background: rgba(10, 10, 10, 0.8);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 1px solid var(--secondary);
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.logo span {
+    color: var(--primary);
+}
+
+.nav {
+    display: flex;
+    gap: 2rem;
+}
+
+.nav a {
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: var(--transition);
+}
+
+.nav a:hover {
+    color: var(--foreground);
+}
+
+.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.search input {
+    background: var(--secondary);
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 20px;
+    color: var(--foreground);
+    width: 300px;
+    outline: none;
+    transition: var(--transition);
+}
+
+.search input:focus {
+    background: var(--card-hover);
+    box-shadow: 0 0 0 2px var(--primary);
+}

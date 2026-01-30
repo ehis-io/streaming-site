@@ -1,0 +1,169 @@
+.container {
+    min-height: 100vh;
+    position: relative;
+}
+
+.backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    z-index: -1;
+    filter: blur(20px) opacity(0.3);
+}
+
+.backdropOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, transparent, var(--background));
+}
+
+.content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 2rem 5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.backBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 1rem;
+    transition: var(--transition);
+}
+
+.backBtn:hover {
+    color: white;
+    transform: translateX(-5px);
+}
+
+.playerSection {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.playerWrapper {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%;
+    /* 16:9 Aspect Ratio */
+    background: #000;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.noPlayer {
+    width: 100%;
+    padding-top: 56.25%;
+    background: var(--secondary);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.noPlayerContent {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.noPlayer p {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.noPlayer span {
+    color: var(--text-muted);
+}
+
+.providerSelector {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+}
+
+.btn,
+.activeBtn {
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: var(--transition);
+    background: var(--secondary);
+    color: var(--text-muted);
+}
+
+.activeBtn {
+    background: var(--primary);
+    color: white;
+}
+
+.btn:hover {
+    background: var(--card-hover);
+    color: white;
+}
+
+.infoSection {
+    max-width: 800px;
+}
+
+.title {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    letter-spacing: -1px;
+}
+
+.meta {
+    display: flex;
+    gap: 1.5rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 2rem;
+}
+
+.rating {
+    color: var(--accent);
+}
+
+.overview {
+    font-size: 1.15rem;
+    line-height: 1.8;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.loading {
+    height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+}

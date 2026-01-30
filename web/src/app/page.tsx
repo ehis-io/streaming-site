@@ -1,0 +1,91 @@
+'use client';
+
+import { useEffect, useState, Suspense } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import MovieCard from '@/components/MovieCard';
+import styles from './page.module.css';
+
+interface Movie {
+  id: number;
+  title?: string;
+  name?: string;
+  poster_path?: string;
+  vote_average: number;
+  release_date?: string;
+  first_air_date?: string;
+}
+
+function HomeContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchQuery = searchParams.get('q') || '';
+  const [movies, setMovies] = useState<Movie[]>([]);
+
+  useEffect(() => {
+    const endpoint = searchQuery
+      ? `http://localhost:4001/api/v1/movies/search?q=${searchQuery}`
+      : 'http://localhost:4001/api/v1/movies/trending';
+
+    fetch(endpoint)
+      .then(res => res.json())
+      .then(data => setMovies(data.results || []))
+      .catch(err => console.error('Fetch error:', err));
+  }, [searchQuery]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const params = new URLSearchParams(searchParams);
+    if (value) {
+      params.set('q', value);
+    } else {
+      params.delete('q');
+    }
+    router.replace(`${pathname}?${params.toString()}`);
+  };
+
+  return (
+    <div className={styles.container}>
+      <section className={styles.hero}>
+        <h1>Unlimited Legal Streaming</h1>
+        <p>Discover movies and shows from official sources.</p>
+        <div className={styles.searchBar}>
+          <input
+            type="text"
+            placeholder="Search for movies..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+          />
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Trending Today</h2>
+        <div className={styles.grid}>
+          {movies.length > 0 ? (
+            movies.map(movie => (
+              <MovieCard
+                key={movie.id}
+                id={movie.id}
+                title={movie.title || movie.name || 'Untitled'}
+                posterPath={movie.poster_path || ''}
+                rating={movie.vote_average}
+                year={movie.release_date || movie.first_air_date || ''}
+              />
+            ))
+          ) : (
+            <p>Loading trending content...</p>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomeContent />
+    </Suspense>
+  );
+}
