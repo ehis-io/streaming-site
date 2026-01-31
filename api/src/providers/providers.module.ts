@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ProvidersService } from './providers.service';
-import { SimpleScraper } from './scrapers/simple.scraper';
 import { VidSrcScraper } from './scrapers/vidsrc.scraper';
-import { SuperStreamScraper } from './scrapers/superstream.scraper';
+import { VidLinkScraper } from './scrapers/vidlink.scraper';
 import { TmdbModule } from '../tmdb/tmdb.module';
 import { SCRAPER_TOKEN } from './scraper.interface';
 
@@ -10,17 +9,16 @@ import { SCRAPER_TOKEN } from './scraper.interface';
   imports: [TmdbModule],
   providers: [
     ProvidersService,
-    SimpleScraper,
     VidSrcScraper,
-    SuperStreamScraper,
+    VidLinkScraper,
     {
       provide: SCRAPER_TOKEN,
-      useFactory: (simple: SimpleScraper, vidsrc: VidSrcScraper, superstream: SuperStreamScraper) => {
-        return [simple, vidsrc, superstream];
+      useFactory: (vidsrc: VidSrcScraper, vidlink: VidLinkScraper) => {
+        return [vidsrc, vidlink];
       },
-      inject: [SimpleScraper, VidSrcScraper, SuperStreamScraper],
+      inject: [VidSrcScraper, VidLinkScraper],
     },
   ],
   exports: [ProvidersService],
 })
-export class ProvidersModule {}
+export class ProvidersModule { }
