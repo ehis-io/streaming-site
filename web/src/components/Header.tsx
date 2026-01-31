@@ -24,9 +24,9 @@ export default function Header() {
                     Stream<span>Hub</span>
                 </Link>
                 <nav className={styles.nav}>
-                    <Link href="/">Movies</Link>
+                    <Link href="/movies">Movies</Link>
                     <Link href="/tv">TV Shows</Link>
-                    <Link href="/genres" className={styles.disabled}>Genres</Link>
+                    <Link href="/discover">Discover</Link>
                 </nav>
                 <div className={styles.search}>
                     <form onSubmit={handleSearch}>

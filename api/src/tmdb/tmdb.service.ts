@@ -39,7 +39,7 @@ export class TmdbService {
     }
   }
 
-  async getTrending(type: 'movie' | 'tv' = 'movie', page: number = 1) {
+  async getTrending(type: 'movie' | 'tv' | 'all' = 'movie', page: number = 1) {
     return this.getCachedRequest(`trending:${type}:page:${page}`, `${this.baseUrl}/trending/${type}/day`, { page });
   }
 
@@ -47,7 +47,23 @@ export class TmdbService {
      return this.getCachedRequest(`search:${type}:${query}:page:${page}`, `${this.baseUrl}/search/${type}`, { query, page });
   }
 
+  async searchMulti(query: string, page: number = 1) {
+     return this.getCachedRequest(`search:multi:${query}:page:${page}`, `${this.baseUrl}/search/multi`, { query, page });
+  }
+
   async getDetails(id: number, type: 'movie' | 'tv' = 'movie') {
      return this.getCachedRequest(`details:${type}:${id}`, `${this.baseUrl}/${type}/${id}`, {});
+  }
+
+  async getGenres(type: 'movie' | 'tv' = 'movie') {
+    return this.getCachedRequest(`genres:${type}`, `${this.baseUrl}/genre/${type}/list`, {});
+  }
+
+  async discover(type: 'movie' | 'tv' = 'movie', params: any = {}) {
+    // Generate a simpler cache key for discovery to prevent massive key proliferation
+    // In a real app, you might want more robust key generation
+    const { page = 1, with_genres = '', sort_by = 'popularity.desc' } = params;
+    const cacheKey = `discover:${type}:p${page}:g${with_genres}:s${sort_by}`;
+    return this.getCachedRequest(cacheKey, `${this.baseUrl}/discover/${type}`, params);
   }
 }

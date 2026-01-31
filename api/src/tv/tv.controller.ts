@@ -22,6 +22,16 @@ export class TvController {
     return this.tvService.search(query.q, page ? +page : 1);
   }
 
+  @Get('genres')
+  getGenres() {
+    return this.tvService.getGenres();
+  }
+
+  @Get('discover')
+  discover(@Query() query: any) {
+    return this.tvService.discover(query);
+  }
+
   @Get(':id')
   getDetails(@Param('id') id: string) {
     return this.tvService.getDetails(+id);

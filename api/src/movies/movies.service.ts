@@ -29,4 +29,12 @@ export class MoviesService {
       localProviders: dbData?.providers || [],
     };
   }
+
+  async getGenres() {
+    return this.tmdbService.getGenres('movie');
+  }
+
+  async discover(params: any) {
+    return this.tmdbService.discover('movie', params);
+  }
 }

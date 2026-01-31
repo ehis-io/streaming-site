@@ -13,6 +13,7 @@ interface Movie {
   vote_average: number;
   release_date?: string;
   first_air_date?: string;
+  media_type?: 'movie' | 'tv';
 }
 
 function HomeContent() {
@@ -25,8 +26,8 @@ function HomeContent() {
 
   useEffect(() => {
     const endpoint = searchQuery
-      ? `http://localhost:4001/api/v1/movies/search?q=${searchQuery}&page=${page}`
-      : `http://localhost:4001/api/v1/movies/trending?page=${page}`;
+      ? `http://localhost:4001/api/v1/search?q=${searchQuery}&page=${page}`
+      : `http://localhost:4001/api/v1/trending?page=${page}`;
 
     fetch(endpoint)
       .then(res => res.json())
@@ -57,7 +58,7 @@ function HomeContent() {
   return (
     <div className={styles.container}>
       <section className={styles.hero}>
-        <h1>Unlimited Legal Streaming</h1>
+        <h1>Unlimited Streaming</h1>
         <p>Discover movies and shows from official sources.</p>
         <div className={styles.searchBar}>
           <input
@@ -70,17 +71,18 @@ function HomeContent() {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Trending Today</h2>
+        <h2 className={styles.sectionTitle}>Trending Movies & Shows</h2>
         <div className={styles.grid}>
           {movies.length > 0 ? (
             movies.map(movie => (
               <MovieCard
-                key={movie.id}
+                key={`${movie.media_type || 'movie'}-${movie.id}`}
                 id={movie.id}
                 title={movie.title || movie.name || 'Untitled'}
                 posterPath={movie.poster_path || ''}
                 rating={movie.vote_average}
-                year={movie.release_date || movie.first_air_date || ''}
+                year={(movie.release_date || movie.first_air_date || '').split('-')[0]}
+                type={movie.media_type || 'movie'}
               />
             ))
           ) : (
