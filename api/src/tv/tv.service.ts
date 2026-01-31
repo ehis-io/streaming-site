@@ -9,12 +9,12 @@ export class TvService {
     private prismaService: PrismaService,
   ) {}
 
-  async getTrending() {
-    return this.tmdbService.getTrending('tv');
+  async getTrending(page: number = 1) {
+    return this.tmdbService.getTrending('tv', page);
   }
 
-  async search(query: string) {
-    return this.tmdbService.search(query, 'tv');
+  async search(query: string, page: number = 1) {
+    return this.tmdbService.search(query, 'tv', page);
   }
 
   async getDetails(id: number) {

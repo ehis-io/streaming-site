@@ -13,13 +13,13 @@ export class TvController {
   constructor(private readonly tvService: TvService) {}
 
   @Get('trending')
-  getTrending() {
-    return this.tvService.getTrending();
+  getTrending(@Query('page') page: string) {
+    return this.tvService.getTrending(page ? +page : 1);
   }
 
   @Get('search')
-  search(@Query() query: SearchDto) {
-    return this.tvService.search(query.q);
+  search(@Query() query: SearchDto, @Query('page') page: string) {
+    return this.tvService.search(query.q, page ? +page : 1);
   }
 
   @Get(':id')

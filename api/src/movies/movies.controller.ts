@@ -7,13 +7,13 @@ export class MoviesController {
   constructor(private readonly moviesService: MoviesService) {}
 
   @Get('trending')
-  getTrending() {
-    return this.moviesService.getTrending();
+  getTrending(@Query('page') page: string) {
+    return this.moviesService.getTrending(page ? +page : 1);
   }
 
   @Get('search')
-  search(@Query() query: SearchDto) {
-    return this.moviesService.search(query.q);
+  search(@Query() query: SearchDto, @Query('page') page: string) {
+    return this.moviesService.search(query.q, page ? +page : 1);
   }
 
   @Get(':id')

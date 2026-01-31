@@ -21,17 +21,27 @@ function HomeContent() {
   const pathname = usePathname();
   const searchQuery = searchParams.get('q') || '';
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const endpoint = searchQuery
-      ? `http://localhost:4001/api/v1/movies/search?q=${searchQuery}`
-      : 'http://localhost:4001/api/v1/movies/trending';
+      ? `http://localhost:4001/api/v1/movies/search?q=${searchQuery}&page=${page}`
+      : `http://localhost:4001/api/v1/movies/trending?page=${page}`;
 
     fetch(endpoint)
       .then(res => res.json())
       .then(data => setMovies(data.results || []))
       .catch(err => console.error('Fetch error:', err));
+  }, [searchQuery, page]);
+
+  useEffect(() => {
+    setPage(1);
   }, [searchQuery]);
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    window.scrollTo(0, 0);
+  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -76,6 +86,24 @@ function HomeContent() {
           ) : (
             <p>Loading trending content...</p>
           )}
+        </div>
+
+        <div className={styles.pagination}>
+          <button
+            disabled={page === 1}
+            onClick={() => handlePageChange(page - 1)}
+            className={styles.pageBtn}
+          >
+            Previous
+          </button>
+          <span className={styles.pageInfo}>Page {page}</span>
+          <button
+            disabled={movies.length === 0}
+            onClick={() => handlePageChange(page + 1)}
+            className={styles.pageBtn}
+          >
+            Next
+          </button>
         </div>
       </section>
     </div>

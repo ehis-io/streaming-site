@@ -8,15 +8,16 @@ interface MovieCardProps {
     posterPath: string;
     rating: number;
     year: string;
+    type?: 'movie' | 'tv';
 }
 
-export default function MovieCard({ id, title, posterPath, rating, year }: MovieCardProps) {
+export default function MovieCard({ id, title, posterPath, rating, year, type = 'movie' }: MovieCardProps) {
     const imageUrl = posterPath
         ? `https://image.tmdb.org/t/p/w500${posterPath}`
         : 'https://via.placeholder.com/500x750?text=No+Poster';
 
     return (
-        <Link href={`/movie/${id}`} className={styles.card}>
+        <Link href={`/${type}/${id}`} className={styles.card}>
             <div className={styles.imageWrapper}>
                 <Image
                     src={imageUrl}

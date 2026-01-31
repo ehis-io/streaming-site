@@ -25,7 +25,7 @@ export default function Header() {
                 </Link>
                 <nav className={styles.nav}>
                     <Link href="/">Movies</Link>
-                    <Link href="/genres" className={styles.disabled}>TV Shows</Link>
+                    <Link href="/tv">TV Shows</Link>
                     <Link href="/genres" className={styles.disabled}>Genres</Link>
                 </nav>
                 <div className={styles.search}>

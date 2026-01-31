@@ -150,15 +150,21 @@ export default function MovieDetail({ params: paramsPromise }: { params: Promise
                     <div className={styles.selectorSection}>
                         <h3 className={styles.selectorTitle}>Select Server</h3>
                         <div className={styles.providerSelector}>
-                            {allProviders.map((p: Provider) => (
-                                <button
-                                    key={p.id}
-                                    onClick={() => setSelectedProvider(p)}
-                                    className={selectedProvider?.id === p.id ? styles.activeBtn : styles.btn}
-                                >
-                                    {p.name}
-                                </button>
-                            ))}
+                            <select
+                                className={styles.select}
+                                value={selectedProvider?.id || ''}
+                                onChange={(e) => {
+                                    const provider = allProviders.find(p => p.id === e.target.value);
+                                    if (provider) setSelectedProvider(provider);
+                                }}
+                            >
+                                <option value="" disabled>Select a source</option>
+                                {allProviders.map((p: Provider) => (
+                                    <option key={p.id} value={p.id}>
+                                        {p.name}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                     </div>
                 </div>

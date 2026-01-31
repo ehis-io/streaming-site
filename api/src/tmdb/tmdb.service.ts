@@ -39,12 +39,12 @@ export class TmdbService {
     }
   }
 
-  async getTrending(type: 'movie' | 'tv' = 'movie') {
-    return this.getCachedRequest(`trending:${type}`, `${this.baseUrl}/trending/${type}/day`, {});
+  async getTrending(type: 'movie' | 'tv' = 'movie', page: number = 1) {
+    return this.getCachedRequest(`trending:${type}:page:${page}`, `${this.baseUrl}/trending/${type}/day`, { page });
   }
 
-  async search(query: string, type: 'movie' | 'tv' = 'movie') {
-     return this.getCachedRequest(`search:${type}:${query}`, `${this.baseUrl}/search/${type}`, { query });
+  async search(query: string, type: 'movie' | 'tv' = 'movie', page: number = 1) {
+     return this.getCachedRequest(`search:${type}:${query}:page:${page}`, `${this.baseUrl}/search/${type}`, { query, page });
   }
 
   async getDetails(id: number, type: 'movie' | 'tv' = 'movie') {

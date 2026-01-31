@@ -9,12 +9,12 @@ export class MoviesService {
     private prismaService: PrismaService,
   ) {}
 
-  async getTrending() {
-    return this.tmdbService.getTrending('movie');
+  async getTrending(page: number = 1) {
+    return this.tmdbService.getTrending('movie', page);
   }
 
-  async search(query: string) {
-    return this.tmdbService.search(query);
+  async search(query: string, page: number = 1) {
+    return this.tmdbService.search(query, 'movie', page);
   }
 
   async getDetails(id: number) {
