@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState, use, useMemo } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 
@@ -23,50 +23,67 @@ interface Movie {
     localProviders: Provider[];
 }
 
+interface StreamLink {
+    provider: string;
+    url: string;
+}
+
 export default function MovieDetail({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
     const params = use(paramsPromise);
     const [movie, setMovie] = useState<Movie | null>(null);
+    const [dynamicProviders, setDynamicProviders] = useState<Provider[]>([]);
     const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setMovie(null);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setDynamicProviders([]);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSelectedProvider(null);
+
         // Fetch movie details
         fetch(`http://localhost:4001/api/v1/movies/${params.id}`)
             .then(res => res.json())
             .then(data => {
                 setMovie(data);
-                // Initial providers from DB
-                if (data.localProviders?.length > 0 && !selectedProvider) {
-                    setSelectedProvider(data.localProviders[0]);
-                }
             })
             .catch(err => console.error('Movie fetch error:', err));
 
         // Fetch dynamic streams
         fetch(`http://localhost:4001/api/v1/streams/${params.id}`)
             .then(res => res.json())
-            .then((links: any[]) => {
-                setMovie(prev => {
-                    if (!prev) return prev;
-
-                    const dynamicProviders = links.map((link, index) => ({
-                        id: `dynamic-${index}`,
-                        name: link.provider,
-                        embedUrl: link.url
-                    }));
-
-                    // Combine local and dynamic providers, avoiding duplicates if possible
-                    const combined = [...(prev.localProviders || []), ...dynamicProviders];
-
-                    // Auto-select first dynamic provider if no local one was selected
-                    if (dynamicProviders.length > 0 && (!selectedProvider || selectedProvider.id.startsWith('dynamic-'))) {
-                        setSelectedProvider(dynamicProviders[0]);
-                    }
-
-                    return { ...prev, localProviders: combined };
-                });
+            .then((links: StreamLink[]) => {
+                const providers = links.map((link, index) => ({
+                    id: `dynamic-${index}`,
+                    name: link.provider,
+                    embedUrl: link.url
+                }));
+                setDynamicProviders(providers);
             })
             .catch(err => console.error('Streams fetch error:', err));
-    }, [params.id, selectedProvider]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [params.id]);
+
+    const allProviders = useMemo(() => {
+        const local = movie?.localProviders || [];
+        const dynamic = dynamicProviders;
+
+        // Deduplicate providers to prevent key collisions (handling potential HMR state artifacts)
+        const seen = new Set<string>();
+        return [...local, ...dynamic].filter(p => {
+            if (seen.has(String(p.id))) return false;
+            seen.add(String(p.id));
+            return true;
+        });
+    }, [movie, dynamicProviders]);
+
+    useEffect(() => {
+        if (!selectedProvider && allProviders.length > 0) {
+            setSelectedProvider(allProviders[0]);
+        }
+    }, [allProviders, selectedProvider]);
+
 
     if (!movie) return <div className={styles.loading}>Loading...</div>;
 
@@ -101,22 +118,25 @@ export default function MovieDetail({ params: paramsPromise }: { params: Promise
                     ) : (
                         <div className={styles.noPlayer}>
                             <div className={styles.noPlayerContent}>
-                                <p>No legal embeds found for this title.</p>
+                                <p>No streams found for this movie.</p>
                                 <span>Check back later or try another source.</span>
                             </div>
                         </div>
                     )}
 
-                    <div className={styles.providerSelector}>
-                        {movie.localProviders?.map((p: Provider) => (
-                            <button
-                                key={p.id}
-                                onClick={() => setSelectedProvider(p)}
-                                className={selectedProvider?.id === p.id ? styles.activeBtn : styles.btn}
-                            >
-                                {p.name}
-                            </button>
-                        ))}
+                    <div className={styles.selectorSection}>
+                        <h3 className={styles.selectorTitle}>Select Server</h3>
+                        <div className={styles.providerSelector}>
+                            {allProviders.map((p: Provider) => (
+                                <button
+                                    key={p.id}
+                                    onClick={() => setSelectedProvider(p)}
+                                    className={selectedProvider?.id === p.id ? styles.activeBtn : styles.btn}
+                                >
+                                    {p.name}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
@@ -129,6 +149,7 @@ export default function MovieDetail({ params: paramsPromise }: { params: Promise
                     </div>
                     <p className={styles.overview}>{movie.overview || 'No overview available.'}</p>
                 </div>
+
             </div>
         </div>
     );
