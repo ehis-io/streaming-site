@@ -84,6 +84,29 @@ export default function MovieDetail({ params: paramsPromise }: { params: Promise
         }
     }, [allProviders, selectedProvider]);
 
+    // VidLink Event Listeners
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            if (event.origin !== 'https://vidlink.pro') return;
+
+            // Handle watch progress data
+            if (event.data?.type === 'MEDIA_DATA') {
+                const mediaData = event.data.data;
+                console.log('VidLink: Received media progress data', mediaData);
+                localStorage.setItem('vidLinkProgress', JSON.stringify(mediaData));
+            }
+
+            // Handle player events
+            if (event.data?.type === 'PLAYER_EVENT') {
+                const { event: eventType, currentTime, duration, mediaType } = event.data.data;
+                console.log(`VidLink Player Event: ${eventType} at ${currentTime}s of ${duration}s (${mediaType})`);
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, []);
+
 
     if (!movie) return <div className={styles.loading}>Loading...</div>;
 

@@ -54,7 +54,7 @@ export class VidSrcScraper implements Scraper {
 
       return [{
         url: embedUrl,
-        quality: '1080p',
+        quality: 'Auto',
         isM3U8: false,
         headers: {
           'Referer': `${domain}/`,
