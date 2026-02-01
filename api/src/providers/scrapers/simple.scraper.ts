@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Scraper, ScraperSearchResult, StreamLink } from '../api/src/providers/scraper.interface';
+import { Scraper, ScraperSearchResult, StreamLink } from '../scraper.interface';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 

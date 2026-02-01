@@ -1,9 +1,10 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
-import { Scraper, StreamLink, SCRAPER_TOKEN } from './scraper.interface';
+import { Scraper, StreamLink, ScraperSearchResult, SCRAPER_TOKEN } from './scraper.interface';
 import { TmdbService } from '../tmdb/tmdb.service';
 import { MALService } from '../mal/mal.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
+import { PrismaService } from '../prisma/prisma.service';
 import axios from 'axios';
 
 @Injectable()
@@ -15,6 +16,7 @@ export class ProvidersService {
     private tmdbService: TmdbService,
     private malService: MALService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private prisma: PrismaService,
   ) {
     // Ensure scrapers is an array (handles cases where NestJS might inject a single object or nothing)
     this.scrapers = Array.isArray(this.scrapers) ? this.scrapers : (this.scrapers ? [this.scrapers] : []);
@@ -34,12 +36,33 @@ export class ProvidersService {
       return cached;
     }
 
+    // Check Database for persistent storage
     const numericId = parseInt(id);
     if (isNaN(numericId)) return [];
 
     let activeMediaType = mediaType;
     if (!activeMediaType) {
       activeMediaType = (season && episode) ? 'tv' : 'movie';
+    }
+
+    const dbLinks = await (this.prisma as any).streamedLink.findMany({
+      where: activeMediaType === 'anime'
+        ? { malId: numericId, episode: episode || 1 }
+        : { tmdbId: numericId, season: season || null, episode: episode || null }
+    });
+
+    if (dbLinks.length > 0) {
+      this.logger.log(`Found ${dbLinks.length} streams in DB for ${id}`);
+      const links = dbLinks.map(dbLink => ({
+        url: dbLink.url,
+        quality: dbLink.quality || 'Auto',
+        isM3U8: dbLink.isM3U8,
+        provider: dbLink.provider,
+        headers: dbLink.headers ? JSON.parse(dbLink.headers) : undefined
+      }));
+      // Also cache in Redis for faster access
+      await this.cacheManager.set(cacheKey, links, 86400000);
+      return links;
     }
 
     let title = '';
@@ -86,7 +109,64 @@ export class ProvidersService {
     const allLinks: StreamLink[] = [];
     const promises = this.scrapers.map(async (scraper) => {
       try {
-        const searchResults = await scraper.search(title, tmdbId, imdbId, malId);
+        let searchResults: ScraperSearchResult[] = [];
+
+        // Check for existing mapping to skip search
+        const mapping = await (this.prisma as any).providerMapping.findFirst({
+          where: activeMediaType === 'anime'
+            ? { malId: malId || undefined, provider: scraper.name }
+            : { tmdbId: tmdbId || undefined, provider: scraper.name }
+        });
+
+        if (mapping) {
+          this.logger.debug(`Using mapped URL for ${scraper.name}: ${mapping.externalUrl}`);
+          searchResults = [{
+            title: title || 'Media',
+            url: mapping.externalUrl
+          }];
+        } else {
+          searchResults = await scraper.search(title, tmdbId, imdbId, malId);
+
+          // Save the first mapping for future use
+          if (searchResults.length > 0) {
+            const bestResult = searchResults[0];
+            try {
+              // Manual find to handle overlapping unique constraints safely on MongoDB
+              const existingMapping = await (this.prisma as any).providerMapping.findFirst({
+                where: {
+                  provider: scraper.name,
+                  OR: [
+                    tmdbId ? { tmdbId } : undefined,
+                    malId ? { malId } : undefined,
+                  ].filter(Boolean) as any
+                }
+              });
+
+              if (existingMapping) {
+                await (this.prisma as any).providerMapping.update({
+                  where: { id: existingMapping.id },
+                  data: {
+                    externalUrl: bestResult.url,
+                    // Update IDs if they were missing but are now found
+                    tmdbId: tmdbId || existingMapping.tmdbId,
+                    malId: malId || existingMapping.malId
+                  }
+                });
+              } else {
+                await (this.prisma as any).providerMapping.create({
+                  data: {
+                    tmdbId: tmdbId || null,
+                    malId: malId || null,
+                    provider: scraper.name,
+                    externalUrl: bestResult.url
+                  }
+                });
+              }
+            } catch (mapError) {
+              this.logger.debug(`Could not save provider mapping: ${mapError.message}`);
+            }
+          }
+        }
 
         const scraperLinksPromises = searchResults.map(async (result) => {
           try {
@@ -133,6 +213,50 @@ export class ProvidersService {
 
     if (allLinks.length > 0) {
       await this.cacheManager.set(cacheKey, allLinks, 86400000); // 24 hours
+
+      // Persist to Database for long-term cache
+      try {
+        const createManyParams = allLinks.map(link => ({
+          tmdbId: activeMediaType !== 'anime' ? tmdbId : null,
+          malId: activeMediaType === 'anime' ? malId : null,
+          season: season || null,
+          episode: episode || null,
+          url: link.url,
+          quality: link.quality,
+          isM3U8: !!link.isM3U8,
+          provider: link.provider || 'Unknown',
+          headers: link.headers ? JSON.stringify(link.headers) : null
+        }));
+
+        // Avoid duplicates if same URL exists for same ID/EP
+        for (const data of createManyParams) {
+          await (this.prisma as any).streamedLink.upsert({
+            where: {
+              // We need a unique constraint to avoid duplicates. 
+              // Since schema doesn't have one yet, we'll check first or just create if missing.
+              id: '000000000000000000000000' // dummy since we don't have unique index on url+id+ep yet
+            },
+            update: {},
+            create: data
+          }).catch(async () => {
+            // Fallback for missing unique constraint: just create if not exists
+            const existing = await (this.prisma as any).streamedLink.findFirst({
+              where: {
+                url: data.url,
+                tmdbId: data.tmdbId,
+                malId: data.malId,
+                season: data.season,
+                episode: data.episode
+              }
+            });
+            if (!existing) {
+              await (this.prisma as any).streamedLink.create({ data });
+            }
+          });
+        }
+      } catch (dbError) {
+        this.logger.warn(`Failed to save streams to DB: ${dbError.message}`);
+      }
     }
 
     return allLinks;
@@ -147,7 +271,7 @@ export class ProvidersService {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         },
-        timeout: 5000
+        timeout: 15000
       });
 
       const data = response.data;

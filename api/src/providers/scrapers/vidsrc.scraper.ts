@@ -17,6 +17,12 @@ export class VidSrcScraper implements Scraper {
     // VidSrc-embed.ru works with both TMDB and IMDB IDs
     // Example: https://vidsrc-embed.ru/embed/movie?imdb=tt36741457
 
+    // TEMP: Skip VidSrc if TMDB ID is not present
+    if (!tmdbId) {
+      this.logger.debug('VidSrc requires TMDB ID, skipping');
+      return [];
+    }
+
     if (!imdbId && !tmdbId) {
       this.logger.warn('VidSrc requires IMDB or TMDB ID, cannot search by title alone');
       return [];

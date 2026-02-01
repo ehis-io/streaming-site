@@ -12,6 +12,10 @@ export class VidLinkScraper implements Scraper {
   constructor(private configService: ConfigService) { }
 
   async search(query: string, tmdbId?: number, imdbId?: string, malId?: number): Promise<ScraperSearchResult[]> {
+    // TEMP: Skip VidLink for now
+    this.logger.debug('VidLink temporarily disabled');
+    return [];
+
     if (malId) {
       return [{
         title: `${query} (VidLink Anime)`,

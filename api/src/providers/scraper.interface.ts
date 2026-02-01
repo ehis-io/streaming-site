@@ -3,6 +3,7 @@ export interface StreamLink {
   url: string;
   quality?: string; // e.g. "1080p", "720p"
   isM3U8?: boolean;
+  provider?: string;
   headers?: Record<string, string>; // Referer, User-Agent etc.
 }
 

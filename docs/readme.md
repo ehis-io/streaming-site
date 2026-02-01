@@ -34,3 +34,14 @@ https://www.miruro.com/
 9anime (AniWave) Scrapers
 
 https://www.reddit.com/r/MyAnimeList/comments/1mr1nih/myanimelist_vs_simkl_vs_anilist_vs_imdb_best/
+
+https://guides.viren070.me/stremio/addons/anime-kitsu
+
+
+this is how gogo anime does search:
+
+https://gogoanime.by/?s=naruto
+
+https://gogoanime.by/?s=naruto+shippuuden
+
+https://gogoanime.by/?s=Sousou+no+Frieren+2nd+Season

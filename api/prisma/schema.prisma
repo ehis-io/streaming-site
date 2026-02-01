@@ -48,3 +48,34 @@ model AnimeProvider {
   updatedAt   DateTime @updatedAt
 }
 
+
+model StreamedLink {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  tmdbId      Int?
+  malId       Int?
+  season      Int?
+  episode     Int?
+  url         String
+  quality     String?
+  isM3U8      Boolean  @default(false)
+  provider    String
+  headers     String?  // JSON stringified headers
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tmdbId, season, episode])
+  @@index([malId, episode])
+}
+
+model ProviderMapping {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  tmdbId      Int?
+  malId       Int?
+  provider    String
+  externalUrl String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tmdbId, provider])
+  @@unique([malId, provider])
+}
