@@ -111,11 +111,14 @@ export class ProvidersService {
       try {
         let searchResults: ScraperSearchResult[] = [];
 
+        // Unique key for individual provider mappings
+        const mappingKey = activeMediaType === 'anime'
+          ? `mal:${malId}:${scraper.name}`
+          : `tmdb:${tmdbId}:${scraper.name}`;
+
         // Check for existing mapping to skip search
-        const mapping = await (this.prisma as any).providerMapping.findFirst({
-          where: activeMediaType === 'anime'
-            ? { malId: malId || undefined, provider: scraper.name }
-            : { tmdbId: tmdbId || undefined, provider: scraper.name }
+        const mapping = await (this.prisma as any).providerMapping.findUnique({
+          where: { mappingKey }
         });
 
         if (mapping) {
@@ -131,39 +134,24 @@ export class ProvidersService {
           if (searchResults.length > 0) {
             const bestResult = searchResults[0];
             try {
-              // Manual find to handle overlapping unique constraints safely on MongoDB
-              const existingMapping = await (this.prisma as any).providerMapping.findFirst({
-                where: {
+              // Manual upsert-like logic with mappingKey
+              await (this.prisma as any).providerMapping.upsert({
+                where: { mappingKey },
+                update: {
+                  externalUrl: bestResult.url,
+                  tmdbId: tmdbId || null,
+                  malId: malId || null
+                },
+                create: {
+                  mappingKey,
+                  tmdbId: tmdbId || null,
+                  malId: malId || null,
                   provider: scraper.name,
-                  OR: [
-                    tmdbId ? { tmdbId } : undefined,
-                    malId ? { malId } : undefined,
-                  ].filter(Boolean) as any
+                  externalUrl: bestResult.url
                 }
               });
-
-              if (existingMapping) {
-                await (this.prisma as any).providerMapping.update({
-                  where: { id: existingMapping.id },
-                  data: {
-                    externalUrl: bestResult.url,
-                    // Update IDs if they were missing but are now found
-                    tmdbId: tmdbId || existingMapping.tmdbId,
-                    malId: malId || existingMapping.malId
-                  }
-                });
-              } else {
-                await (this.prisma as any).providerMapping.create({
-                  data: {
-                    tmdbId: tmdbId || null,
-                    malId: malId || null,
-                    provider: scraper.name,
-                    externalUrl: bestResult.url
-                  }
-                });
-              }
             } catch (mapError) {
-              this.logger.debug(`Could not save provider mapping: ${mapError.message}`);
+              this.logger.warn(`Could not save provider mapping for ${mappingKey}: ${mapError.message}`);
             }
           }
         }
