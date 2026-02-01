@@ -3,6 +3,8 @@
 import { useEffect, useState, use, useMemo } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
+import { config } from '@/config';
+
 
 interface Provider {
     id: string;
@@ -92,6 +94,29 @@ export default function TVDetail({ params: paramsPromise }: { params: Promise<{ 
             setSelectedProvider(allProviders[0]);
         }
     }, [allProviders, selectedProvider]);
+
+    // VidLink Event Listeners
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            if (event.origin !== 'https://vidlink.pro') return;
+
+            // Handle watch progress data
+            if (event.data?.type === 'MEDIA_DATA') {
+                const mediaData = event.data.data;
+                console.log('VidLink TV: Received media progress data', mediaData);
+                localStorage.setItem('vidLinkProgress', JSON.stringify(mediaData));
+            }
+
+            // Handle player events
+            if (event.data?.type === 'PLAYER_EVENT') {
+                const { event: eventType, currentTime, duration, mediaType } = event.data.data;
+                console.log(`VidLink TV Player Event: ${eventType} at ${currentTime}s of ${duration}s (${mediaType})`);
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, []);
 
     if (!show) return <div className={styles.loading}>Loading...</div>;
 
@@ -183,9 +208,9 @@ export default function TVDetail({ params: paramsPromise }: { params: Promise<{ 
                                 }}
                             >
                                 <option value="" disabled>Select a source</option>
-                                {allProviders.map((p: Provider) => (
+                                {allProviders.map((p: Provider, index: number) => (
                                     <option key={p.id} value={p.id}>
-                                        {p.name}
+                                        {config.encodeServerNames ? `Server ${index + 1}` : p.name}
                                     </option>
                                 ))}
                             </select>
