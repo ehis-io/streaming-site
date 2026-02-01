@@ -8,7 +8,8 @@ import {
     MangaEndpoint,
     SeasonsEndpoint,
     TopEndpoint,
-    GenresEndpoint
+    GenresEndpoint,
+    ProducersEndpoint
 } from 'myanimelist-wrapper';
 
 @Injectable()
@@ -24,6 +25,7 @@ export class MALService {
         private seasonsEndpoint: SeasonsEndpoint,
         private topEndpoint: TopEndpoint,
         private genresEndpoint: GenresEndpoint,
+        private producersEndpoint: ProducersEndpoint,
     ) { }
 
     private async getCachedRequest<T>(key: string, requestFn: () => Promise<T>, ttl: number = 604800000): Promise<T> {
@@ -68,7 +70,7 @@ export class MALService {
 
     async getProducers() {
         return this.getCachedRequest(`mal:producers`, () =>
-            (this.jikanClient as any).getProducers()
+            this.producersEndpoint.getAll()
         );
     }
 

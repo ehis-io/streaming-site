@@ -81,7 +81,7 @@ export class AnimesService {
             return {
                 producers: (data as any).data.map((p: any) => ({
                     id: p.mal_id,
-                    name: p.titles[0]?.title || p.name
+                    name: (p.titles && p.titles[0]) ? p.titles[0].title : (p.name || 'Unknown')
                 }))
             };
         }
