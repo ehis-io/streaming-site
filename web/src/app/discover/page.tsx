@@ -133,7 +133,7 @@ function DiscoverContent() {
                             className={styles.select}
                         >
                             <option value="movie">Movies</option>
-                            <option value="anime">Animes</option>
+                            {/* <option value="anime">Animes</option> */}
                             <option value="tv">TV Shows</option>
                         </select>
                     </div>
