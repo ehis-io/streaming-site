@@ -1,12 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Scraper, ScraperSearchResult, StreamLink } from '../scraper.interface';
 
 @Injectable()
 export class VidLinkScraper implements Scraper {
   name = 'VidLink';
-  priority = 10; // Higher priority as it's a reliable provider
+  priority = 10;
   private readonly logger = new Logger(VidLinkScraper.name);
   private readonly baseUrl = 'https://vidlink.pro';
+
+  constructor(private configService: ConfigService) { }
 
   async search(query: string, tmdbId?: number, imdbId?: string): Promise<ScraperSearchResult[]> {
     if (!tmdbId) {
@@ -14,8 +17,6 @@ export class VidLinkScraper implements Scraper {
       return [];
     }
 
-    // Since VidLink uses direct TMDB ID-based URLs, we return a virtual search result
-    // that getStreamLinks will use to construct the final URL.
     return [{
       title: `${query} (VidLink)`,
       url: `${this.baseUrl}/movie/${tmdbId}`, // Default to movie URL
@@ -29,20 +30,21 @@ export class VidLinkScraper implements Scraper {
     try {
       let finalUrl = url;
 
-      // If it's a TV show episode, transform the URL
       if (episode) {
-        // url is something like: https://vidlink.pro/movie/12345
-        // We need: https://vidlink.pro/tv/12345/season/episode
         finalUrl = url.replace('/movie/', '/tv/') + `/${episode.season}/${episode.episode}`;
       }
 
-      // Add default customization parameters for a premium look
-      // primaryColor=63b8bc&secondaryColor=a2a2a2&iconColor=eefdec&icons=vid&title=true&poster=true&nextbutton=true
+      // Read customization from config or use theme-consistent defaults
+      const primaryColor = this.configService.get<string>('VIDLINK_PRIMARY_COLOR', 'e50914');
+      const secondaryColor = this.configService.get<string>('VIDLINK_SECONDARY_COLOR', '1f1f1f');
+      const iconColor = this.configService.get<string>('VIDLINK_ICON_COLOR', 'ffffff');
+      const icons = this.configService.get<string>('VIDLINK_ICONS', 'vid');
+
       const params = new URLSearchParams({
-        primaryColor: '63b8bc',
-        secondaryColor: 'a2a2a2',
-        iconColor: 'eefdec',
-        icons: 'vid',
+        primaryColor,
+        secondaryColor,
+        iconColor,
+        icons,
         title: 'true',
         poster: 'true',
         nextbutton: 'true'
