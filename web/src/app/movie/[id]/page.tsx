@@ -3,6 +3,8 @@
 import { useEffect, useState, use, useMemo } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
+import { config } from '@/config';
+
 
 interface Provider {
     id: string;
@@ -159,9 +161,9 @@ export default function MovieDetail({ params: paramsPromise }: { params: Promise
                                 }}
                             >
                                 <option value="" disabled>Select a source</option>
-                                {allProviders.map((p: Provider) => (
+                                {allProviders.map((p: Provider, index: number) => (
                                     <option key={p.id} value={p.id}>
-                                        {p.name}
+                                        {config.encodeServerNames ? `Server ${index + 1}` : p.name}
                                     </option>
                                 ))}
                             </select>
