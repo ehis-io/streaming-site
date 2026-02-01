@@ -31,4 +31,8 @@ export class DiscoverDto extends PaginationDto {
     @Type(() => Number)
     @IsNumber()
     'vote_average.gte'?: number;
+
+    @IsOptional()
+    @IsString()
+    producers?: string;
 }

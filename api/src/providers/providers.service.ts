@@ -52,8 +52,12 @@ export class ProvidersService {
     }
 
     // Check Database for persistent storage
+    // Ensure ID is numeric for TMDB/MAL providers
     const numericId = parseInt(id);
-    if (isNaN(numericId)) return [];
+    if (isNaN(numericId) || numericId <= 0) {
+      this.logger.warn(`Invalid numeric ID provided for stream discovery: ${id}`);
+      return [];
+    }
 
     let activeMediaType = mediaType;
     if (!activeMediaType) {
@@ -127,7 +131,7 @@ export class ProvidersService {
       !s.supportedTypes || s.supportedTypes.includes(activeMediaType!)
     );
 
-    const promises = activeScrapers.map(async (scraper) => {
+    const scraperResults = await Promise.all(activeScrapers.map(async (scraper) => {
       try {
         let searchResults: ScraperSearchResult[] = [];
 
@@ -186,7 +190,7 @@ export class ProvidersService {
             return links.map(l => ({
               ...l,
               provider: result.title.includes('(') ? result.title : `${scraper.name} (${new URL(result.url).hostname})`
-            }));
+            }) as (StreamLink & { provider: string }));
           } catch (e) {
             this.logger.warn(`${scraper.name} mirror ${result.url} failed: ${e.message}`);
             return [];
@@ -198,24 +202,26 @@ export class ProvidersService {
 
         // Validate streams (check for "Not Found" or specific error text)
         // This is important for providers that return 200 OK even for error pages
-        const validLinks: StreamLink[] = [];
-        for (const link of flatLinks) {
-          if (await this.validateStream(link.url)) {
-            validLinks.push(link);
-            if (onLinkFound) onLinkFound(link); // REPORT REAL-TIME
-          } else {
-            this.logger.warn(`Filtered out invalid stream: ${link.url}`);
-          }
-        }
+        // Validate streams in parallel (respecting per-domain limits inside validateStream)
+        const validationResults = await Promise.all(
+          flatLinks.map(async (link) => {
+            // Respecting per-domain limits inside validateStream
+            const isValid = await this.validateStream(link.url);
+            if (isValid) {
+              if (onLinkFound) (onLinkFound as any)(link); // REPORT REAL-TIME
+              return link;
+            }
+            return null;
+          })
+        );
 
-        return validLinks;
+        return validationResults.filter((l): l is (typeof flatLinks)[0] => l !== null);
       } catch (e) {
         this.logger.warn(`${scraper.name} failed: ${e.message}`);
+        return [];
       }
-      return [];
-    });
+    }));
 
-    const scraperResults = await Promise.all(promises);
     scraperResults.forEach(res => {
       if (res) allLinks.push(...res);
     });
@@ -240,29 +246,24 @@ export class ProvidersService {
 
         // Avoid duplicates if same URL exists for same ID/EP
         for (const data of createManyParams) {
-          await (this.prisma as any).streamedLink.upsert({
-            where: {
-              // We need a unique constraint to avoid duplicates. 
-              // Since schema doesn't have one yet, we'll check first or just create if missing.
-              id: '000000000000000000000000' // dummy since we don't have unique index on url+id+ep yet
-            },
-            update: {},
-            create: data
-          }).catch(async () => {
-            // Fallback for missing unique constraint: just create if not exists
+          try {
             const existing = await (this.prisma as any).streamedLink.findFirst({
               where: {
                 url: data.url,
                 tmdbId: data.tmdbId,
                 malId: data.malId,
                 season: data.season,
-                episode: data.episode
+                episode: data.episode,
+                type: data.type
               }
             });
+
             if (!existing) {
               await (this.prisma as any).streamedLink.create({ data });
             }
-          });
+          } catch (e) {
+            this.logger.warn(`Failed to save link ${data.url} to DB: ${e.message}`);
+          }
         }
       } catch (dbError) {
         this.logger.warn(`Failed to save streams to DB: ${dbError.message}`);
@@ -327,24 +328,61 @@ export class ProvidersService {
   private async executeValidation(url: string, attempt: number = 1): Promise<boolean> {
     const domain = new URL(url).hostname;
     try {
+      // First try a HEAD request - it's much faster and uses less bandwidth
+      // Some providers block HEAD, so we fallback to GET
+      try {
+        const headResponse = await axios.head(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Referer': url
+          },
+          timeout: 5000
+        });
+        if (headResponse.status === 200) return true;
+      } catch (headError) {
+        // If HEAD fails, proceed to GET
+        this.logger.debug(`HEAD validation failed for ${url}, trying GET...`);
+      }
+
       const response = await axios.get(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Referer': url
         },
-        timeout: 15000
+        timeout: 10000,
+        responseType: 'stream' // Use stream to avoid downloading huge files
       });
 
-      const data = response.data;
-      if (typeof data === 'string') {
-        const lowerData = data.toLowerCase();
-        if (lowerData.includes("we coudn't find this episode") ||
-          lowerData.includes("please check back another time") ||
-          lowerData.includes("404 not found") ||
-          lowerData.includes("video not found")) {
-          return false;
-        }
-      }
-      return true;
+      // Read only a small portion of the response to check for error text
+      return new Promise((resolve) => {
+        let buffer = '';
+        const stream = response.data;
+
+        stream.on('data', (chunk: Buffer) => {
+          buffer += chunk.toString('utf8');
+          const lowerData = buffer.toLowerCase();
+
+          if (lowerData.includes("we coudn't find this episode") ||
+            lowerData.includes("please check back another time") ||
+            lowerData.includes("404 not found") ||
+            lowerData.includes("video not found") ||
+            lowerData.includes("file was deleted") ||
+            lowerData.includes("no longer available")) {
+            stream.destroy();
+            resolve(false);
+          }
+
+          // If we've read 10KB and haven't found error text, assume it's valid
+          if (buffer.length > 10240) {
+            stream.destroy();
+            resolve(true);
+          }
+        });
+
+        stream.on('end', () => resolve(true));
+        stream.on('error', () => resolve(false));
+      });
+
     } catch (e) {
       if (e.response?.status === 429 && attempt <= this.MAX_RETRIES) {
         this.logger.warn(`Rate limited (429) by ${domain}. Retrying in ${this.RETRY_DELAY_MS}ms (Attempt ${attempt}/${this.MAX_RETRIES})`);
