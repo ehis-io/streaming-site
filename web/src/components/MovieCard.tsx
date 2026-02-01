@@ -7,14 +7,16 @@ interface MovieCardProps {
     title: string;
     posterPath: string;
     rating: number;
-    year: string;
-    type?: 'movie' | 'tv';
+    year: string | number;
+    type?: string;
 }
 
 export default function MovieCard({ id, title, posterPath, rating, year, type = 'movie' }: MovieCardProps) {
     const imageUrl = posterPath
-        ? `https://image.tmdb.org/t/p/w500${posterPath}`
+        ? (posterPath.startsWith('http') ? posterPath : `https://image.tmdb.org/t/p/w500${posterPath}`)
         : 'https://via.placeholder.com/500x750?text=No+Poster';
+
+    const displayYear = typeof year === 'string' ? year.split('-')[0] : year;
 
     return (
         <Link href={`/${type}/${id}`} className={styles.card}>
@@ -26,6 +28,7 @@ export default function MovieCard({ id, title, posterPath, rating, year, type = 
                     width={500}
                     height={750}
                     priority={id < 5} // Priority for the first few cards
+                    unoptimized={imageUrl.startsWith('http') && !imageUrl.includes('tmdb.org')}
                 />
                 <div className={styles.overlay}>
                     <div className={styles.rating}>{rating.toFixed(1)}</div>
@@ -33,7 +36,7 @@ export default function MovieCard({ id, title, posterPath, rating, year, type = 
             </div>
             <div className={styles.info}>
                 <h3 className={styles.title}>{title}</h3>
-                <p className={styles.meta}>{year ? year.split('-')[0] : 'N/A'}</p>
+                <p className={styles.meta}>{displayYear || 'N/A'}</p>
             </div>
         </Link>
     );

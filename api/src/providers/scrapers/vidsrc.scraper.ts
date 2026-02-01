@@ -13,7 +13,7 @@ export class VidSrcScraper implements Scraper {
     'https://vsrc.su'
   ];
 
-  async search(query: string, tmdbId?: number, imdbId?: string): Promise<ScraperSearchResult[]> {
+  async search(query: string, tmdbId?: number, imdbId?: string, malId?: number): Promise<ScraperSearchResult[]> {
     // VidSrc-embed.ru works with both TMDB and IMDB IDs
     // Example: https://vidsrc-embed.ru/embed/movie?imdb=tt36741457
 
@@ -32,7 +32,7 @@ export class VidSrcScraper implements Scraper {
     }));
   }
 
-  async getStreamLinks(url: string, episode?: { season: number, episode: number }): Promise<StreamLink[]> {
+  async getStreamLinks(url: string, episode?: { season?: number, episode: number, type?: 'sub' | 'dub' }): Promise<StreamLink[]> {
     this.logger.log(`Fetching stream from ${url}`);
 
     try {
@@ -41,7 +41,7 @@ export class VidSrcScraper implements Scraper {
       const domain = `${urlObj.protocol}//${urlObj.hostname}`;
 
       // Handle TV show episode information
-      if (episode) {
+      if (episode && episode.season) {
         if (url.includes('/movie?')) {
           embedUrl = url.replace('/movie?', '/tv?');
         }

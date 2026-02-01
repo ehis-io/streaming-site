@@ -9,19 +9,23 @@ import { MoviesModule } from './movies/movies.module';
 import { TvModule } from './tv/tv.module';
 import { StreamsModule } from './streams/streams.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { MALModule } from './mal/mal.module';
+import { AnimesModule } from './animes/animes.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     RedisModule,
     TmdbModule,
+    MALModule,
     ProvidersModule,
     MoviesModule,
     TvModule,
     StreamsModule,
     PrismaModule,
+    AnimesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

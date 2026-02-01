@@ -24,18 +24,18 @@ export class TmdbService {
     }
 
     if (!this.apiKey || this.apiKey.includes('your_tmdb_api_key')) {
-        this.logger.warn(`TMDB API Key missing or invalid. Returning empty/mock for ${key}`);
-        // Return minimal mock to prevent crash during setup
-        return { results: [], mock: true };
+      this.logger.warn(`TMDB API Key missing or invalid. Returning empty/mock for ${key}`);
+      // Return minimal mock to prevent crash during setup
+      return { results: [], mock: true };
     }
-    
+
     try {
-        const response = await axios.get(url, { params: { ...params, api_key: this.apiKey } });
-        await this.cacheManager.set(key, response.data, ttl);
-        return response.data;
+      const response = await axios.get(url, { params: { ...params, api_key: this.apiKey } });
+      await this.cacheManager.set(key, response.data, ttl);
+      return response.data;
     } catch (e) {
-        this.logger.error(`TMDB request failed: ${e.message}`);
-        throw e;
+      this.logger.error(`TMDB request failed: ${e.message}`);
+      throw e;
     }
   }
 
@@ -44,15 +44,15 @@ export class TmdbService {
   }
 
   async search(query: string, type: 'movie' | 'tv' = 'movie', page: number = 1) {
-     return this.getCachedRequest(`search:${type}:${query}:page:${page}`, `${this.baseUrl}/search/${type}`, { query, page });
+    return this.getCachedRequest(`search:${type}:${query}:page:${page}`, `${this.baseUrl}/search/${type}`, { query, page });
   }
 
   async searchMulti(query: string, page: number = 1) {
-     return this.getCachedRequest(`search:multi:${query}:page:${page}`, `${this.baseUrl}/search/multi`, { query, page });
+    return this.getCachedRequest(`search:multi:${query}:page:${page}`, `${this.baseUrl}/search/multi`, { query, page });
   }
 
   async getDetails(id: number, type: 'movie' | 'tv' = 'movie') {
-     return this.getCachedRequest(`details:${type}:${id}`, `${this.baseUrl}/${type}/${id}`, {});
+    return this.getCachedRequest(`details:${type}:${id}`, `${this.baseUrl}/${type}/${id}`, {});
   }
 
   async getGenres(type: 'movie' | 'tv' = 'movie') {
@@ -65,5 +65,9 @@ export class TmdbService {
     const { page = 1, with_genres = '', sort_by = 'popularity.desc' } = params;
     const cacheKey = `discover:${type}:p${page}:g${with_genres}:s${sort_by}`;
     return this.getCachedRequest(cacheKey, `${this.baseUrl}/discover/${type}`, params);
+  }
+
+  async getRecommendations(id: number, type: 'movie' | 'tv' = 'movie', page: number = 1) {
+    return this.getCachedRequest(`recommendations:${type}:${id}:page:${page}`, `${this.baseUrl}/${type}/${id}/recommendations`, { page });
   }
 }

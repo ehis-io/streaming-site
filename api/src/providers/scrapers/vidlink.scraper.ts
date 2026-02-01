@@ -11,7 +11,15 @@ export class VidLinkScraper implements Scraper {
 
   constructor(private configService: ConfigService) { }
 
-  async search(query: string, tmdbId?: number, imdbId?: string): Promise<ScraperSearchResult[]> {
+  async search(query: string, tmdbId?: number, imdbId?: string, malId?: number): Promise<ScraperSearchResult[]> {
+    if (malId) {
+      return [{
+        title: `${query} (VidLink Anime)`,
+        url: `${this.baseUrl}/anime/${malId}`,
+        poster: ''
+      }];
+    }
+
     if (!tmdbId) {
       this.logger.warn('VidLink requires TMDB ID for embedding');
       return [];
@@ -24,13 +32,19 @@ export class VidLinkScraper implements Scraper {
     }];
   }
 
-  async getStreamLinks(url: string, episode?: { season: number, episode: number }): Promise<StreamLink[]> {
-    this.logger.log(`Generating VidLink stream for: ${url} ${episode ? `(S${episode.season}E${episode.episode})` : ''}`);
+  async getStreamLinks(url: string, episode?: { season?: number, episode: number, type?: 'sub' | 'dub' }): Promise<StreamLink[]> {
+    this.logger.log(`Generating VidLink stream for: ${url} ${episode ? `(E${episode.episode}${episode.season ? `, S${episode.season}` : ''}, ${episode.type})` : ''}`);
 
     try {
       let finalUrl = url;
 
-      if (episode) {
+      if (url.includes('/anime/')) {
+        // Format: /anime/{MALid}/{number}/{subOrDub}
+        const type = episode?.type || 'sub';
+        const epNum = episode?.episode || 1;
+        finalUrl = `${url}/${epNum}/${type}`;
+        this.logger.log(`VidLink Anime URL constructed: ${finalUrl} (MAL ID: ${url.split('/anime/')[1]}, Episode: ${epNum}, Type: ${type})`);
+      } else if (episode && episode.season) {
         finalUrl = url.replace('/movie/', '/tv/') + `/${episode.season}/${episode.episode}`;
       }
 
@@ -45,9 +59,12 @@ export class VidLinkScraper implements Scraper {
         secondaryColor,
         iconColor,
         icons,
+        player: 'default',
+        autoplay: 'true',
         title: 'true',
         poster: 'true',
-        nextbutton: 'true'
+        nextbutton: 'true',
+        fallback: 'true'
       });
 
       finalUrl = `${finalUrl}?${params.toString()}`;

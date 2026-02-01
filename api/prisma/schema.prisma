@@ -27,3 +27,24 @@ model Provider {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model Anime {
+  id          String          @id @default(auto()) @map("_id") @db.ObjectId
+  malId       Int             @unique
+  title       String
+  providers   AnimeProvider[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model AnimeProvider {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  animeId     String   @db.ObjectId
+  anime       Anime    @relation(fields: [animeId], references: [id])
+  name        String
+  embedUrl    String
+  priority    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+

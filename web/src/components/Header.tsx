@@ -25,6 +25,7 @@ export default function Header() {
                 </Link>
                 <nav className={styles.nav}>
                     <Link href="/movies">Movies</Link>
+                    <Link href="/animes">Animes</Link>
                     <Link href="/tv">TV Shows</Link>
                     <Link href="/discover">Discover</Link>
                 </nav>

@@ -4,14 +4,20 @@ import { GetStreamsDto } from './dto/get-streams.dto';
 
 @Controller('streams')
 export class StreamsController {
-  constructor(private readonly providersService: ProvidersService) {}
+  constructor(private readonly providersService: ProvidersService) { }
 
   @Get(':id')
   async getStreams(
     @Param('id') id: string,
     @Query() query: GetStreamsDto,
   ) {
-    return this.providersService.findStreamLinks(id, query.season, query.episode);
+    return this.providersService.findStreamLinks(
+      id,
+      query.season,
+      query.episode,
+      query.type,
+      query.mediaType
+    );
   }
 
   @Get(':id/:season/:episode')
@@ -19,7 +25,8 @@ export class StreamsController {
     @Param('id') id: string,
     @Param('season') season: string,
     @Param('episode') episode: string,
+    @Query('type') type: 'sub' | 'dub' = 'sub',
   ) {
-    return this.providersService.findStreamLinks(id, parseInt(season), parseInt(episode));
+    return this.providersService.findStreamLinks(id, parseInt(season), parseInt(episode), type);
   }
 }
