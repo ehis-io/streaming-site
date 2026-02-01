@@ -4,6 +4,7 @@ import { TmdbService } from '../tmdb/tmdb.service';
 import { MALService } from '../mal/mal.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
+import axios from 'axios';
 
 @Injectable()
 export class ProvidersService {
@@ -53,6 +54,22 @@ export class ProvidersService {
         const animeResponse = await this.malService.getDetails(malId);
         details = (animeResponse as any).data;
         title = details.title;
+
+        // Try to map MAL Anime to TMDB TV Show by title
+        try {
+          const searchRes = await this.tmdbService.search(title, 'tv');
+          if (searchRes.results && searchRes.results.length > 0) {
+            // Best effort: take first result. 
+            // In production, we might want to check release year or fuzzy match title.
+            tmdbId = searchRes.results[0].id;
+            this.logger.log(`Mapped Anime "${title}" (MAL: ${malId}) to TMDB ID: ${tmdbId}`);
+          } else {
+            this.logger.warn(`Could not find TMDB match for Anime "${title}"`);
+          }
+        } catch (searchError) {
+          this.logger.warn(`TMDB search failed for Anime mapping: ${searchError.message}`);
+        }
+
       } else {
         tmdbId = numericId;
         details = await this.tmdbService.getDetails(tmdbId, activeMediaType as 'movie' | 'tv');
@@ -89,7 +106,20 @@ export class ProvidersService {
         });
 
         const nestedResults = await Promise.all(scraperLinksPromises);
-        return nestedResults.flat();
+        const flatLinks = nestedResults.flat();
+
+        // Validate streams (check for "Not Found" or specific error text)
+        // This is important for providers that return 200 OK even for error pages
+        const validLinks: StreamLink[] = [];
+        for (const link of flatLinks) {
+          if (await this.validateStream(link.url)) {
+            validLinks.push(link);
+          } else {
+            this.logger.warn(`Filtered out invalid stream: ${link.url}`);
+          }
+        }
+
+        return validLinks;
       } catch (e) {
         this.logger.warn(`${scraper.name} failed: ${e.message}`);
       }
@@ -106,5 +136,35 @@ export class ProvidersService {
     }
 
     return allLinks;
+  }
+
+  private async validateStream(url: string): Promise<boolean> {
+    try {
+      // Simple head check or fetch first bytes?
+      // Some providers return 200 OK with "Video not found" text. 
+      // We'll scrape the content to check for error messages.
+      const response = await axios.get(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        timeout: 5000
+      });
+
+      const data = response.data;
+      if (typeof data === 'string') {
+        const lowerData = data.toLowerCase();
+        if (lowerData.includes("we coudn't find this episode") ||
+          lowerData.includes("please check back another time") ||
+          lowerData.includes("404 not found") ||
+          lowerData.includes("video not found")) {
+          return false;
+        }
+      }
+      return true;
+    } catch (e) {
+      // If it returns 404/500, it's invalid
+      this.logger.debug(`Stream validation failed for ${url}: ${e.message}`);
+      return false;
+    }
   }
 }

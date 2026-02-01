@@ -5,7 +5,7 @@ import { Scraper, ScraperSearchResult, StreamLink } from '../scraper.interface';
 @Injectable()
 export class VidLinkScraper implements Scraper {
   name = 'VidLink';
-  priority = 10;
+  priority = 5;
   private readonly logger = new Logger(VidLinkScraper.name);
   private readonly baseUrl = 'https://vidlink.pro';
 

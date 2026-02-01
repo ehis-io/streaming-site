@@ -32,3 +32,5 @@ https://www.reddit.com/r/animeapp/comments/1fbv5ww/my_anime_app_collection/
 https://www.miruro.com/
 
 9anime (AniWave) Scrapers
+
+https://www.reddit.com/r/MyAnimeList/comments/1mr1nih/myanimelist_vs_simkl_vs_anilist_vs_imdb_best/
