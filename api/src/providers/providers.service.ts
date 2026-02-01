@@ -13,7 +13,11 @@ export class ProvidersService {
 
   private readonly validationQueues = new Map<string, (() => Promise<void>)[]>();
   private readonly activeValidations = new Map<string, number>();
+  private readonly coolingDownDomains = new Map<string, number>();
   private readonly MAX_CONCURRENT_PER_DOMAIN = 2;
+  private readonly RETRY_DELAY_MS = 5000;
+  private readonly COOL_DOWN_MS = 30000;
+  private readonly MAX_RETRIES = 3;
 
   constructor(
     @Inject(SCRAPER_TOKEN) private scrapers: Scraper[],
@@ -279,6 +283,13 @@ export class ProvidersService {
       return this.executeValidation(url);
     }
 
+    // Check if domain is in cool-down
+    const coolDownUntil = this.coolingDownDomains.get(domain);
+    if (coolDownUntil && Date.now() < coolDownUntil) {
+      this.logger.debug(`Skipping validation for ${domain} due to cool-down until ${new Date(coolDownUntil).toISOString()}`);
+      return false;
+    }
+
     // Rate limiting logic for restricted domains
     return new Promise((resolve) => {
       const queue = this.validationQueues.get(domain) || [];
@@ -313,7 +324,8 @@ export class ProvidersService {
     }
   }
 
-  private async executeValidation(url: string): Promise<boolean> {
+  private async executeValidation(url: string, attempt: number = 1): Promise<boolean> {
+    const domain = new URL(url).hostname;
     try {
       const response = await axios.get(url, {
         headers: {
@@ -334,6 +346,16 @@ export class ProvidersService {
       }
       return true;
     } catch (e) {
+      if (e.response?.status === 429 && attempt <= this.MAX_RETRIES) {
+        this.logger.warn(`Rate limited (429) by ${domain}. Retrying in ${this.RETRY_DELAY_MS}ms (Attempt ${attempt}/${this.MAX_RETRIES})`);
+
+        // Set cool-down for the domain to prevent new requests from starting
+        this.coolingDownDomains.set(domain, Date.now() + this.COOL_DOWN_MS);
+
+        await new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY_MS));
+        return this.executeValidation(url, attempt + 1);
+      }
+
       this.logger.debug(`Stream validation failed for ${url}: ${e.message}`);
       return false;
     }
