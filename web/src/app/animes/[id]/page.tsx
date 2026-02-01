@@ -4,7 +4,6 @@ import { useEffect, useState, use, useMemo } from 'react';
 import Link from 'next/link';
 import Spinner from '@/components/Spinner';
 import styles from './page.module.css';
-import { config } from '@/config';
 
 interface Provider {
     id: string;
@@ -195,7 +194,7 @@ export default function AnimeDetail({ params: paramsPromise }: { params: Promise
                                 <option value="" disabled>Select a source</option>
                                 {allProviders.map((p, index) => (
                                     <option key={p.id} value={p.id}>
-                                        {config.encodeServerNames ? `Server ${index + 1}` : p.name}
+                                        {process.env.NEXT_PUBLIC_ENCODE_SERVER_NAMES === 'true' ? `Server ${index + 1}` : p.name}
                                     </option>
                                 ))}
                             </select>
