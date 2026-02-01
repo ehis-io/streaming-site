@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 
 export const metadata: Metadata = {
   title: "StreamHub - Streaming Aggregator",
-  description: "Discover and watch movies from multiple licensed platforms.",
+  description: "Discover and watch movies from multiple platforms.",
 };
 
 export default function RootLayout({
