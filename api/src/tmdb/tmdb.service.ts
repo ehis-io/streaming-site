@@ -17,7 +17,7 @@ export class TmdbService {
     this.apiKey = this.configService.get<string>('TMDB_API_KEY') || '';
   }
 
-  private async getCachedRequest(key: string, url: string, params: any, ttl: number = 3600000) {
+  private async getCachedRequest(key: string, url: string, params: any, ttl: number = 604800000) {
     const cached = await this.cacheManager.get(key);
     if (cached) {
       return cached;

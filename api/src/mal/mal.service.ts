@@ -26,7 +26,7 @@ export class MALService {
         private genresEndpoint: GenresEndpoint,
     ) { }
 
-    private async getCachedRequest<T>(key: string, requestFn: () => Promise<T>, ttl: number = 3600000): Promise<T> {
+    private async getCachedRequest<T>(key: string, requestFn: () => Promise<T>, ttl: number = 604800000): Promise<T> {
         const cached = await this.cacheManager.get<T>(key);
         if (cached) {
             return cached;
