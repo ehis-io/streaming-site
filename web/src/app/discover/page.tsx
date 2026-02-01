@@ -12,6 +12,11 @@ interface Genre {
     name: string;
 }
 
+interface Producer {
+    id: number;
+    name: string;
+}
+
 interface Content {
     id: number;
     title?: string;
@@ -32,21 +37,35 @@ function DiscoverContent() {
     const genreId = searchParams.get('genre') || '';
     const sortBy = searchParams.get('sort') || 'popularity.desc';
     const yearFilter = searchParams.get('year') || 'all';
+    const minRating = searchParams.get('rating') || '0';
+    const studioId = searchParams.get('studio') || '';
     const page = Number(searchParams.get('page')) || 1;
 
     const [results, setResults] = useState<Content[]>([]);
     const [genres, setGenres] = useState<Genre[]>([]);
+    const [producers, setProducers] = useState<Producer[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showAlphabetPopup, setShowAlphabetPopup] = useState(false);
     const { prefetch } = usePrefetch();
 
-    // Fetch genres when type changes
+    // Fetch genres & producers when type changes
     useEffect(() => {
         const endpoint = type === 'anime' ? 'animes' : (type === 'tv' ? 'tv' : 'movies');
+        // Fetch Genres
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/${endpoint}/genres`)
             .then(res => res.json())
             .then(data => setGenres(data.genres || []))
             .catch(err => console.error('Genres fetch error:', err));
+
+        // Fetch Producers if anime
+        if (type === 'anime') {
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/animes/producers`)
+                .then(res => res.json())
+                .then(data => setProducers(data.producers || []))
+                .catch(err => console.error('Producers fetch error:', err));
+        } else {
+            setProducers([]);
+        }
     }, [type]);
 
     // Calculate dates based on filter
@@ -56,33 +75,36 @@ function DiscoverContent() {
         const now = new Date();
         const currentYear = now.getFullYear();
         let startYear = currentYear;
-        let endYear = currentYear;
+        let endYear: number | undefined = currentYear;
 
-        if (yearFilter === 'last_year') {
+        if (yearFilter === 'current') {
+            startYear = currentYear;
+            endYear = currentYear;
+        } else if (yearFilter === 'last_year') {
             startYear = currentYear - 1;
             endYear = currentYear - 1;
         } else if (yearFilter === 'last2') {
             startYear = currentYear - 2;
+            endYear = undefined; // Up to current
         } else if (yearFilter === 'last5') {
             startYear = currentYear - 5;
+            endYear = undefined;
         }
 
         const dateGte = `${startYear}-01-01`;
-        const dateLte = `${endYear}-12-31`;
+        const dateLte = endYear ? `${endYear}-12-31` : undefined;
 
         // TMDB uses different params for Movies vs TV
         if (type === 'tv') {
-            return {
-                'first_air_date.gte': dateGte,
-                'first_air_date.lte': dateLte
-            };
+            const params: Record<string, string> = { 'first_air_date.gte': dateGte };
+            if (dateLte) params['first_air_date.lte'] = dateLte;
+            return params;
         }
 
         // Movies and Anime (mapped in backend) use primary_release_date
-        return {
-            'primary_release_date.gte': dateGte,
-            'primary_release_date.lte': dateLte
-        };
+        const params: Record<string, string> = { 'primary_release_date.gte': dateGte };
+        if (dateLte) params['primary_release_date.lte'] = dateLte;
+        return params;
     };
 
     // Fetch discovered content
@@ -93,8 +115,13 @@ function DiscoverContent() {
             page: String(page),
             sort_by: sortBy,
             with_genres: genreId,
+            'vote_average.gte': minRating,
             ...dateParams
         });
+
+        if (type === 'anime' && studioId) {
+            params.append('producers', studioId);
+        }
 
         const endpoint = type === 'anime' ? 'animes' : (type === 'tv' ? 'tv' : 'movies');
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/${endpoint}/discover?${params.toString()}`)
@@ -111,18 +138,18 @@ function DiscoverContent() {
                 console.error('Discover fetch error:', err);
                 setIsLoading(false);
             });
-    }, [type, genreId, sortBy, yearFilter, page, prefetch]);
+    }, [type, genreId, sortBy, yearFilter, minRating, studioId, page, prefetch]);
 
     const updateFilter = (updates: Record<string, string | number | undefined>) => {
         const params = new URLSearchParams(searchParams);
         Object.entries(updates).forEach(([key, value]) => {
-            if (value) {
+            if (value !== undefined && value !== '') {
                 params.set(key, String(value));
             } else {
                 params.delete(key);
             }
         });
-        // Reset page on filter change
+        // Reset page on filter change if not updating page
         if (!updates.page) params.set('page', '1');
         router.push(`${pathname}?${params.toString()}`);
     };
@@ -136,11 +163,11 @@ function DiscoverContent() {
                         <label>Type</label>
                         <select
                             value={type}
-                            onChange={(e) => updateFilter({ type: e.target.value, genre: '', page: 1 })}
+                            onChange={(e) => updateFilter({ type: e.target.value, genre: '', studio: '', page: 1 })}
                             className={styles.select}
                         >
                             <option value="movies">Movies</option>
-                            {/* <option value="anime">Animes</option> */}
+                            <option value="anime">Animes</option>
                             <option value="tv">TV Shows</option>
                         </select>
                     </div>
@@ -173,6 +200,38 @@ function DiscoverContent() {
                             ))}
                         </select>
                     </div>
+
+                    <div className={styles.filterGroup}>
+                        <label>Minimum Rating</label>
+                        <select
+                            value={minRating}
+                            onChange={(e) => updateFilter({ rating: e.target.value, page: 1 })}
+                            className={styles.select}
+                        >
+                            <option value="0">All Ratings</option>
+                            <option value="5">5.0+</option>
+                            <option value="6">6.0+</option>
+                            <option value="7">7.0+</option>
+                            <option value="8">8.0+</option>
+                            <option value="9">9.0+</option>
+                        </select>
+                    </div>
+
+                    {type === 'anime' && producers.length > 0 && (
+                        <div className={styles.filterGroup}>
+                            <label>Studio</label>
+                            <select
+                                value={studioId}
+                                onChange={(e) => updateFilter({ studio: e.target.value, page: 1 })}
+                                className={styles.select}
+                            >
+                                <option value="">All Studios</option>
+                                {producers.map(p => (
+                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     <div className={styles.filterGroup}>
                         <label>Sort By</label>

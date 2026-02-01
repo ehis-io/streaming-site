@@ -61,9 +61,18 @@ export class TmdbService {
 
   async discover(type: 'movie' | 'tv' = 'movie', params: any = {}) {
     // Generate a simpler cache key for discovery to prevent massive key proliferation
-    // In a real app, you might want more robust key generation
-    const { page = 1, with_genres = '', sort_by = 'popularity.desc', 'primary_release_date.gte': dateGte = '', 'primary_release_date.lte': dateLte = '', 'first_air_date.gte': airDateGte = '', 'first_air_date.lte': airDateLte = '' } = params;
-    const cacheKey = `discover:${type}:p${page}:g${with_genres}:s${sort_by}:d${dateGte}-${dateLte}:ad${airDateGte}-${airDateLte}`;
+    const {
+      page = 1,
+      with_genres = '',
+      sort_by = 'popularity.desc',
+      'primary_release_date.gte': dateGte = '',
+      'primary_release_date.lte': dateLte = '',
+      'first_air_date.gte': airDateGte = '',
+      'first_air_date.lte': airDateLte = '',
+      'vote_average.gte': voteGte = ''
+    } = params;
+
+    const cacheKey = `discover:${type}:p${page}:g${with_genres}:s${sort_by}:d${dateGte}-${dateLte}:ad${airDateGte}-${airDateLte}:v${voteGte}`;
     return this.getCachedRequest(cacheKey, `${this.baseUrl}/discover/${type}`, params);
   }
 

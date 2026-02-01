@@ -75,6 +75,19 @@ export class AnimesService {
         return { genres: [] };
     }
 
+    async getProducers() {
+        const data = await this.malService.getProducers();
+        if (data && (data as any).data) {
+            return {
+                producers: (data as any).data.map((p: any) => ({
+                    id: p.mal_id,
+                    name: p.titles[0]?.title || p.name
+                }))
+            };
+        }
+        return { producers: [] };
+    }
+
     async getRecommendations(id: number) {
         return this.malService.getRecommendations(id);
     }

@@ -66,6 +66,12 @@ export class MALService {
         );
     }
 
+    async getProducers() {
+        return this.getCachedRequest(`mal:producers`, () =>
+            (this.jikanClient as any).getProducers()
+        );
+    }
+
     async getRecommendations(id: number) {
         return this.getCachedRequest(`mal:recommendations:${id}`, () =>
             this.animeEndpoint.getRecommendations(id)
@@ -75,6 +81,8 @@ export class MALService {
     async discover(params: any) {
         const page = params.page ? parseInt(params.page) : 1;
         const genres = params.with_genres;
+        const producers = params.producers;
+        const minScore = params['vote_average.gte'];
         const sortByParam = params.sort_by || 'popularity.desc';
         const [sortField, sortDirection] = sortByParam.split('.');
 
@@ -96,6 +104,14 @@ export class MALService {
 
         if (genres) {
             queryParams.genres = genres;
+        }
+
+        if (producers) {
+            queryParams.producers = producers;
+        }
+
+        if (minScore) {
+            queryParams.min_score = minScore;
         }
 
         // Map standard TMDB date params to Jikan params

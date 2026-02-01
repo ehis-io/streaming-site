@@ -23,6 +23,11 @@ export class AnimesController {
         return this.animesService.getGenres();
     }
 
+    @Get('producers')
+    getProducers() {
+        return this.animesService.getProducers();
+    }
+
     @Get('discover')
     discover(@Query() query: DiscoverDto) {
         return this.animesService.discover(query);
