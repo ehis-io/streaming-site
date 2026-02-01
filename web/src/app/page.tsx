@@ -79,7 +79,7 @@ function HomeContent() {
               />
             ))
           ) : (
-            <p>Loading trending content...</p>
+            <Spinner />
           )}
         </div>
 

@@ -77,7 +77,7 @@ function MoviesContent() {
                             />
                         ))
                     ) : (
-                        <p>Loading movies...</p>
+                        <Spinner />
                     )}
                 </div>
 

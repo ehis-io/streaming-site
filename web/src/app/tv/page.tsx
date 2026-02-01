@@ -78,7 +78,7 @@ function TVContent() {
                             />
                         ))
                     ) : (
-                        <p>Loading TV shows...</p>
+                        <Spinner />
                     )}
                 </div>
 

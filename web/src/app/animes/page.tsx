@@ -82,7 +82,7 @@ function AnimesContent() {
                             />
                         ))
                     ) : (
-                        <p>Loading animes...</p>
+                        <Spinner />
                     )}
                 </div>
 
