@@ -9,8 +9,8 @@
 - [ ] **Advanced Filtering**: Add more granular filters like Rating range, specific Studios (for Anime), or detailed genres.
 
 ### UI/UX
-- [ ] **Mobile Responsiveness**: Further polish the player and grid layouts for smaller screens (mobile/tablet).
-- [ ] **Theme Toggle**: Add a Light/Dark mode toggle (currently "Dark" by default).
+- [x] **Mobile Responsiveness**: Implemented responsive grids, hamburger menu, compact cards, and optimized player/discover layouts for mobile.
+- [x] **Theme Toggle**: Added Light/Dark mode toggle with localStorage persistence in header (desktop) and mobile menu.
 - [ ] **Skeleton Loading**: Replace the spinner with Skeleton loaders for a smoother perceived performance during data fetching.
 - [ ] **Error Boundaries**: Implement React Error Boundaries to gracefully handle crashes in specific components.
 

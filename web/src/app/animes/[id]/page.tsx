@@ -151,7 +151,7 @@ export default function AnimeDetail({ params: paramsPromise }: { params: Promise
                         </div>
                     )}
 
-                    <div className={styles.controlsSection}>
+                    <div className={styles.controlsBar}>
                         <div className={styles.controlGroup}>
                             <label>Episode</label>
                             <select
@@ -178,11 +178,9 @@ export default function AnimeDetail({ params: paramsPromise }: { params: Promise
                                 <option value="dub">Dubbed</option>
                             </select>
                         </div>
-                    </div>
 
-                    <div className={styles.selectorSection}>
-                        <h3 className={styles.selectorTitle}>Select Server</h3>
-                        <div className={styles.providerSelector}>
+                        <div className={styles.controlGroup}>
+                            <label>Server</label>
                             <select
                                 className={styles.select}
                                 value={selectedProvider?.id || ''}

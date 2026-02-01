@@ -142,6 +142,25 @@
     font-weight: bold;
 }
 
+/* Theme Toggle Button */
+.themeToggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: var(--foreground);
+    transition: var(--transition);
+    border-radius: 50%;
+}
+
+.themeToggle:hover {
+    background: var(--secondary);
+    transform: scale(1.1);
+}
+
 /* Mobile Menu Button */
 .hamburger {
     display: none;
@@ -178,7 +197,30 @@
         display: block;
     }
 
-    /* Mobile Menu Overlay */
+    .themeToggle {
+        display: none;
+    }
+
+    /* Mobile Theme Toggle */
+    .mobileThemeToggle {
+        background: var(--secondary);
+        border: none;
+        padding: 1rem;
+        border-radius: 8px;
+        color: var(--foreground);
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        text-align: left;
+    }
+
+    .mobileThemeToggle:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    /* Mobile Search in Menu */
     .mobileMenu {
         display: flex;
         position: fixed;

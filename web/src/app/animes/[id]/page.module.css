@@ -103,37 +103,41 @@
   color: var(--text-muted);
 }
 
-.selectorSection {
+/* Controls Bar */
+.controlsBar {
+  display: flex;
+  gap: 1rem;
   background: rgba(255, 255, 255, 0.03);
   padding: 1.5rem;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
 }
 
-.selectorTitle {
-  font-size: 0.9rem;
+.controlGroup {
+  flex: 1;
+  min-width: 200px;
+}
+
+.controlGroup label {
+  display: block;
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text-muted);
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.5rem;
   font-weight: 700;
-}
-
-.providerSelector {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
 }
 
 .select {
   width: 100%;
-  max-width: 300px;
   padding: 0.75rem 1rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   color: white;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -143,6 +147,23 @@
   background-repeat: no-repeat;
   background-position: right 1rem center;
   background-size: 1em;
+}
+
+.select:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.2);
+}
+
+.select option {
+  background: #1a1a1a;
+  color: white;
+  padding: 10px;
 }
 
 .select:hover {
