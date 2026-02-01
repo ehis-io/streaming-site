@@ -237,17 +237,39 @@ function DiscoverContent() {
 
                 <div className={styles.pagination}>
                     <button
-                        disabled={page === 1}
+                        className={styles.navBtn}
                         onClick={() => updateFilter({ page: page - 1 })}
-                        className={styles.pageBtn}
+                        disabled={page <= 1}
                     >
                         Previous
                     </button>
-                    <span className={styles.pageInfo}>Page {page}</span>
+
+                    <div className={styles.pageNumbers}>
+                        {page > 1 && (
+                            <button
+                                className={`${styles.pageNumber} ${styles.fadedPage}`}
+                                onClick={() => updateFilter({ page: page - 1 })}
+                            >
+                                {page - 1}
+                            </button>
+                        )}
+
+                        <button className={`${styles.pageNumber} ${styles.activePage}`}>
+                            {page}
+                        </button>
+
+                        <button
+                            className={`${styles.pageNumber} ${styles.fadedPage}`}
+                            onClick={() => updateFilter({ page: page + 1 })}
+                        >
+                            {page + 1}
+                        </button>
+                    </div>
+
                     <button
-                        disabled={results.length === 0}
+                        className={styles.navBtn}
                         onClick={() => updateFilter({ page: page + 1 })}
-                        className={styles.pageBtn}
+                        disabled={results.length === 0}
                     >
                         Next
                     </button>

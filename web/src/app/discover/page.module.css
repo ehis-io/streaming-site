@@ -198,38 +198,74 @@
   gap: 2rem;
 }
 
+/* Pagination Styles */
 .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 2rem;
+  gap: 1.5rem;
   margin-top: 4rem;
 }
 
-.pageBtn {
+.pageNumbers {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navBtn {
   background: var(--secondary);
   border: none;
   color: white;
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1.25rem;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
+  font-size: 0.95rem;
 }
 
-.pageBtn:hover:not(:disabled) {
+.navBtn:hover:not(:disabled) {
   background: var(--primary);
   transform: translateY(-2px);
 }
 
-.pageBtn:disabled {
-  opacity: 0.3;
+.navBtn:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.pageInfo {
-  font-size: 1.1rem;
-  font-weight: 600;
+.pageNumber {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.activePage {
+  color: white;
+  background: var(--primary);
+  box-shadow: 0 5px 15px rgba(229, 9, 20, 0.3);
+}
+
+.fadedPage {
+  opacity: 0.6;
+}
+
+.fadedPage:hover {
+  opacity: 1;
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 @keyframes fadeInUp {
