@@ -6,6 +6,7 @@ import MovieCard from '@/components/MovieCard';
 import Spinner from '@/components/Spinner';
 import styles from './page.module.css';
 import { Content } from '@/types';
+import { usePrefetch } from '@/hooks/usePrefetch';
 
 
 function TVContent() {
@@ -15,6 +16,7 @@ function TVContent() {
     const searchQuery = searchParams.get('q') || '';
     const [shows, setShows] = useState<Content[]>([]);
     const [page, setPage] = useState(1);
+    const { prefetch } = usePrefetch();
 
     useEffect(() => {
         const endpoint = searchQuery
@@ -23,9 +25,15 @@ function TVContent() {
 
         fetch(endpoint)
             .then(res => res.json())
-            .then(data => setShows(data.results || []))
+            .then(data => {
+                const results = data.results || [];
+                setShows(results);
+                if (results.length > 0) {
+                    prefetch(results, 'tv');
+                }
+            })
             .catch(err => console.error('Fetch error:', err));
-    }, [searchQuery, page]);
+    }, [searchQuery, page, prefetch]);
 
     useEffect(() => {
         setPage(1);

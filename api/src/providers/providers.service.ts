@@ -29,7 +29,7 @@ export class ProvidersService {
   }
 
   async findStreamLinks(id: string, season?: number, episode?: number, type: 'sub' | 'dub' = 'sub', mediaType?: string): Promise<StreamLink[]> {
-    const cacheKey = `streams:${id}:${season || ''}:${episode || ''}:${type}:${mediaType || ''}`;
+    const cacheKey = `streams:${id}:${season || ''}:${episode || ''}:${mediaType || ''}`;
     const cached = await this.cacheManager.get<StreamLink[]>(cacheKey);
     if (cached) {
       this.logger.log(`Returned cached streams for ${cacheKey}`);
@@ -58,6 +58,7 @@ export class ProvidersService {
         quality: dbLink.quality || 'Auto',
         isM3U8: dbLink.isM3U8,
         provider: dbLink.provider,
+        type: dbLink.type as 'sub' | 'dub',
         headers: dbLink.headers ? JSON.parse(dbLink.headers) : undefined
       }));
       // Also cache in Redis for faster access
@@ -107,7 +108,11 @@ export class ProvidersService {
     this.logger.log(`Resolving streams for ${title} (${activeMediaType})`);
 
     const allLinks: StreamLink[] = [];
-    const promises = this.scrapers.map(async (scraper) => {
+    const activeScrapers = this.scrapers.filter(s =>
+      !s.supportedTypes || s.supportedTypes.includes(activeMediaType!)
+    );
+
+    const promises = activeScrapers.map(async (scraper) => {
       try {
         let searchResults: ScraperSearchResult[] = [];
 
@@ -213,6 +218,7 @@ export class ProvidersService {
           quality: link.quality,
           isM3U8: !!link.isM3U8,
           provider: link.provider || 'Unknown',
+          type: link.type || null,
           headers: link.headers ? JSON.stringify(link.headers) : null
         }));
 
@@ -277,6 +283,60 @@ export class ProvidersService {
       // If it returns 404/500, it's invalid
       this.logger.debug(`Stream validation failed for ${url}: ${e.message}`);
       return false;
+    }
+  }
+
+  /**
+   * Proactively resolve and cache links for a batch of media items.
+   * This runs in the background to avoid blocking the main thread.
+   */
+  async prefetchLinks(items: { id: string, mediaType: 'movie' | 'tv' | 'anime', title?: string }[]) {
+    this.logger.log(`Queueing prefetch for ${items.length} items`);
+
+    // Simple background queue to avoid overloading
+    const queue = [...items];
+    const concurrentLimit = 3;
+
+    const processQueue = async () => {
+      while (queue.length > 0) {
+        const item = queue.shift();
+        if (!item) break;
+
+        try {
+          // Check if already in DB to skip expensive search
+          const numericId = parseInt(item.id);
+          const existing = await (this.prisma as any).streamedLink.findFirst({
+            where: item.mediaType === 'anime'
+              ? { malId: numericId, episode: 1 }
+              : { tmdbId: numericId, season: item.mediaType === 'tv' ? 1 : null, episode: item.mediaType === 'tv' ? 1 : null }
+          });
+
+          if (existing) {
+            this.logger.debug(`Skipping prefetch for ${item.id} - already in DB`);
+            continue;
+          }
+
+          this.logger.debug(`Proactively resolving streams for ${item.id} (${item.mediaType})`);
+          // Resolve links (this also saves to DB and cache)
+          await this.findStreamLinks(
+            item.id,
+            item.mediaType === 'tv' ? 1 : undefined,
+            item.mediaType === 'tv' ? 1 : (item.mediaType === 'anime' ? 1 : undefined),
+            'sub',
+            item.mediaType
+          );
+        } catch (err) {
+          this.logger.debug(`Background prefetch failed for ${item.id}: ${err.message}`);
+        }
+
+        // Small delay between items to be nice to providers
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    };
+
+    // Start workers
+    for (let i = 0; i < Math.min(concurrentLimit, items.length); i++) {
+      processQueue();
     }
   }
 }

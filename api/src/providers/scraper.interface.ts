@@ -5,6 +5,7 @@ export interface StreamLink {
   isM3U8?: boolean;
   provider?: string;
   headers?: Record<string, string>; // Referer, User-Agent etc.
+  type?: 'sub' | 'dub'; // Indicates if the stream is subbed or dubbed
 }
 
 export interface ScraperSearchResult {
@@ -16,6 +17,7 @@ export interface ScraperSearchResult {
 export interface Scraper {
   name: string;
   priority: number;
+  supportedTypes?: string[]; // e.g. ["movie", "tv", "anime"]
 
   /**
    * Search for a movie/tv show on this provider

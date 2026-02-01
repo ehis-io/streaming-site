@@ -6,6 +6,7 @@ import MovieCard from '@/components/MovieCard';
 import Spinner from '@/components/Spinner';
 import styles from './page.module.css';
 import { Content } from '@/types';
+import { usePrefetch } from '@/hooks/usePrefetch';
 
 function MoviesContent() {
     const searchParams = useSearchParams();
@@ -14,6 +15,7 @@ function MoviesContent() {
     const searchQuery = searchParams.get('q') || '';
     const [movies, setMovies] = useState<Content[]>([]);
     const [page, setPage] = useState(1);
+    const { prefetch } = usePrefetch();
 
     useEffect(() => {
         const endpoint = searchQuery
@@ -22,9 +24,15 @@ function MoviesContent() {
 
         fetch(endpoint)
             .then(res => res.json())
-            .then(data => setMovies(data.results || []))
+            .then(data => {
+                const results = data.results || [];
+                setMovies(results);
+                if (results.length > 0) {
+                    prefetch(results, 'movie');
+                }
+            })
             .catch(err => console.error('Fetch error:', err));
-    }, [searchQuery, page]);
+    }, [searchQuery, page, prefetch]);
 
     useEffect(() => {
         setPage(1);
