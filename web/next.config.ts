@@ -1,13 +1,6 @@
 import type { NextConfig } from "next";
 
-const withSerwist = require("@serwist/next").default({
-  swSrc: "src/app/sw.ts",
-  swDest: "public/sw.js",
-  disable: process.env.NODE_ENV === "development",
-});
-
 const nextConfig: NextConfig = {
-  /* config options here */
   images: {
     remotePatterns: [
       {
@@ -22,4 +15,14 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSerwist(nextConfig);
+if (process.env.NEXT_PUBLIC_ENABLE_PWA === 'true') {
+  const withSerwist = require("@serwist/next").default({
+    swSrc: "src/app/sw.ts",
+    swDest: "public/sw.js",
+    disable: process.env.NODE_ENV === "development",
+  });
+
+  module.exports = withSerwist(nextConfig);
+} else {
+  module.exports = nextConfig;
+}

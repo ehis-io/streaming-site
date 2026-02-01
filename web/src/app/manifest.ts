@@ -2,9 +2,9 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: 'StreamHub',
-        short_name: 'StreamHub',
-        description: 'Unlimited streaming of Movies, TV Shows, and Anime.',
+        name: process.env.NEXT_PUBLIC_APP_NAME || 'StreamHub',
+        short_name: process.env.NEXT_PUBLIC_APP_NAME || 'StreamHub',
+        description: process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'Unlimited streaming of Movies, TV Shows, and Anime.',
         start_url: '/',
         display: 'standalone',
         background_color: '#0a0a0a',
