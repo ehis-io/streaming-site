@@ -3,10 +3,10 @@ import { PlaylistsController } from './playlists.controller';
 import { PlaylistsService } from './playlists.service';
 import { AiModule } from '../ai/ai.module';
 import { TmdbModule } from '../tmdb/tmdb.module';
-import { MalModule } from '../mal/mal.module';
+import { MALModule } from '../mal/mal.module';
 
 @Module({
-    imports: [AiModule, TmdbModule, MalModule],
+    imports: [AiModule, TmdbModule, MALModule],
     controllers: [PlaylistsController],
     providers: [PlaylistsService],
 })

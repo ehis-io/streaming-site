@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
 import { TmdbService } from '../tmdb/tmdb.service';
-import { MalService } from '../mal/mal.service';
+import { MALService } from '../mal/mal.service';
 
 @Injectable()
 export class PlaylistsService {
@@ -12,7 +12,7 @@ export class PlaylistsService {
         private prisma: PrismaService,
         private aiService: AiService,
         private tmdbService: TmdbService,
-        private malService: MalService
+        private malService: MALService
     ) { }
 
     async generateFromPrompt(prompt: string) {
