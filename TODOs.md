@@ -5,7 +5,7 @@
 ### Features
 - [ ] **Watchlist / Favorites**: Implement a feature for users to save movies, TV shows, and animes to a local list (using localStorage) or a backend-synced list.
 - [ ] **Watch History**: specific tracking for watched episodes/movies to resume playback.
-- [ ] **Pagination for A-Z Results**: Currently, A-Z results are limited by the initial fetch. Implement pagination to load more titles starting with the same letter.
+- [x] **Pagination for A-Z Results**: Currently, A-Z results are limited by the initial fetch. Implement pagination to load more titles starting with the same letter.
 - [ ] **Advanced Filtering**: Add more granular filters like Rating range, specific Studios (for Anime), or detailed genres.
 
 ### UI/UX
@@ -26,7 +26,7 @@
 ### Features
 - [ ] **More Providers**: Integrate additional streaming providers beyond VidSrc and VidLink for better availability.
 - [ ] **User Accounts**: Implement authentication (JWT/OAuth) to support cloud-synced watchlists and history.
-- [ ] **Recommendations Engine**: Build a smarter recommendation system based on user's viewing habits rather than just "Trending".
+- [ ] **Recommendations Engine**: Build a smarter recommendation system based on user's viewing habits rather than just "Trending" (use LLM).
 
 ### Technical
 - [ ] **Caching Strategy**: Implement Redis or a more robust caching layer to reduce API hits to TMDB/Jikan.
