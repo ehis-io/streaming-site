@@ -6,11 +6,13 @@ export function usePrefetch() {
         if (!items || items.length === 0) return;
 
         const prefetchData = {
-            items: items.map(item => ({
-                id: item.id.toString(),
-                mediaType: mediaTypeOverride || item.media_type || 'movie',
-                title: item.title || item.name
-            }))
+            items: items
+                .filter(item => item.id || item.mal_id)
+                .map(item => ({
+                    id: (item.mal_id || item.id).toString(),
+                    mediaType: mediaTypeOverride || item.media_type || 'movie',
+                    title: item.title || item.name
+                }))
         };
 
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/streams/prefetch`, {
