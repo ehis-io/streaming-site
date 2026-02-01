@@ -43,12 +43,6 @@
     color: var(--foreground);
 }
 
-.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    pointer-events: none;
-}
-
 .search input {
     background: var(--secondary);
     border: none;
@@ -146,4 +140,106 @@
     background: var(--secondary);
     color: var(--text-muted);
     font-weight: bold;
+}
+
+/* Mobile Menu Button */
+.hamburger {
+    display: none;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: var(--foreground);
+}
+
+.mobileMenu {
+    display: none;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 1rem;
+    }
+
+    .logo {
+        font-size: 1.2rem;
+    }
+
+    .nav {
+        display: none !important;
+    }
+
+    .search {
+        display: none !important;
+    }
+
+    .hamburger {
+        display: block;
+    }
+
+    /* Mobile Menu Overlay */
+    .mobileMenu {
+        display: flex;
+        position: fixed;
+        top: 70px;
+        right: 0;
+        width: 80%;
+        max-width: 300px;
+        height: calc(100vh - 70px);
+        background: var(--card-bg);
+        border-left: 1px solid var(--secondary);
+        padding: 2rem 1.5rem;
+        flex-direction: column;
+        gap: 1.5rem;
+        transform: translateX(100%);
+        visibility: hidden;
+        opacity: 0;
+        transition: transform 0.3s ease-in-out, visibility 0s 0.3s, opacity 0.3s ease-in-out;
+        z-index: 999;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .mobileMenu.open {
+        transform: translateX(0);
+        visibility: visible;
+        opacity: 1;
+        transition: transform 0.3s ease-in-out, visibility 0s 0s, opacity 0.3s ease-in-out;
+    }
+
+    .mobileMenu a {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--foreground);
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--secondary);
+        transition: color 0.2s;
+    }
+
+    .mobileMenu a:hover {
+        color: var(--primary);
+    }
+
+    /* Mobile Search in Menu */
+    .mobileSearch {
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px solid var(--secondary);
+    }
+
+    .mobileSearch input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        border-radius: 8px;
+        border: none;
+        background: var(--secondary);
+        color: var(--foreground);
+        outline: none;
+    }
+
+    .mobileSearch input:focus {
+        background: var(--card-hover);
+        box-shadow: 0 0 0 2px var(--primary);
+    }
 }

@@ -199,3 +199,28 @@
     font-size: 1.5rem;
     font-weight: 600;
 }
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .content {
+        padding: 1rem 1rem 3rem;
+    }
+
+    .title {
+        font-size: 2rem;
+    }
+
+    .meta {
+        font-size: 0.9rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .overview {
+        font-size: 1rem;
+    }
+
+    .select {
+        max-width: 100%;
+    }
+}

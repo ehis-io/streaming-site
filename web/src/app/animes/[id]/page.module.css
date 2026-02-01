@@ -103,30 +103,6 @@
   color: var(--text-muted);
 }
 
-.controlsSection {
-  display: flex;
-  gap: 1.5rem;
-  padding: 0 1rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-}
-
-.controlGroup {
-  flex: 1;
-  min-width: 150px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.controlGroup label {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
 .selectorSection {
   background: rgba(255, 255, 255, 0.03);
   padding: 1.5rem;
@@ -186,27 +162,6 @@
   padding: 10px;
 }
 
-.controlsSection {
-  display: flex;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-}
-
-.controlGroup {
-  flex: 1;
-  min-width: 200px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.controlGroup label {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 500;
-}
-
 .infoSection {
   max-width: 800px;
 }
@@ -243,4 +198,29 @@
   justify-content: center;
   font-size: 1.5rem;
   font-weight: 600;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .content {
+    padding: 1rem 1rem 3rem;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .meta {
+    font-size: 0.9rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .overview {
+    font-size: 1rem;
+  }
+
+  .select {
+    max-width: 100%;
+  }
 }

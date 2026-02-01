@@ -9,14 +9,18 @@ export default function Header() {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<any[]>([]);
     const [isFocused, setIsFocused] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const router = useRouter();
+
+    const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         if (query.trim()) {
             router.push(`/search?q=${encodeURIComponent(query)}`);
-            setQuery(''); // Clear after search
+            setQuery('');
             setResults([]);
+            setIsMenuOpen(false);
             (document.activeElement as HTMLElement)?.blur();
         }
     };
@@ -80,17 +84,50 @@ export default function Header() {
                 <Link href="/" className={styles.logo}>
                     Stream<span>Hub</span>
                 </Link>
+
+                {/* Desktop Nav */}
                 <nav className={styles.nav}>
                     <Link href="/movies">Movies</Link>
                     <Link href="/animes">Animes</Link>
                     <Link href="/tv">TV Shows</Link>
                     <Link href="/discover">Discover</Link>
                 </nav>
+
+                {/* Mobile Menu Button */}
+                <button className={styles.hamburger} onClick={toggleMenu} aria-label="Toggle menu">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+
+                {/* Mobile Menu Overlay */}
+                <div className={`${styles.mobileMenu} ${isMenuOpen ? styles.open : ''}`}>
+                    <Link href="/movies" onClick={toggleMenu}>Movies</Link>
+                    <Link href="/animes" onClick={toggleMenu}>Animes</Link>
+                    <Link href="/tv" onClick={toggleMenu}>TV Shows</Link>
+                    <Link href="/discover" onClick={toggleMenu}>Discover</Link>
+
+                    {/* Search at bottom */}
+                    <div className={styles.mobileSearch}>
+                        <form onSubmit={handleSearch}>
+                            <input
+                                type="text"
+                                placeholder="Search..."
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                            />
+                        </form>
+                    </div>
+                </div>
+
+                {/* Desktop Search */}
                 <div className={styles.search}>
                     <form onSubmit={handleSearch}>
                         <input
                             type="text"
-                            placeholder="Search movies, animes or tv shows..."
+                            placeholder="Search..."
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             onFocus={() => setIsFocused(true)}
