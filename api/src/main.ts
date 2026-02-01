@@ -14,7 +14,20 @@ async function bootstrap() {
   // Swagger Setup
   const config = new DocumentBuilder()
     .setTitle('Streaming Site API')
-    .setDescription('The Streaming Site API description')
+    .setDescription(
+      'The Streaming Site API description\n\n' +
+      '### WebSockets (Socket.io)\n' +
+      'The API provides a real-time gateway for stream discovery and prefetching.\n\n' +
+      '**Endpoint:** `/` (Root namespace)\n\n' +
+      '**Events (Client -> Server):**\n' +
+      '- `prefetch`: `{ items: Array<{ id: string, mediaType: "movie"|"tv"|"anime", title?: string }> }`\n' +
+      '- `find-streams`: `{ id: string, season?: number, episode?: number, type?: "sub"|"dub", mediaType?: "movie"|"tv"|"anime" }`\n\n' +
+      '**Events (Server -> Client):**\n' +
+      '- `prefetch-link`: `{ id: string, link: StreamLink }` (Emitted for each found link during prefetch)\n' +
+      '- `prefetch-complete`: `{ success: boolean, error?: string }` (Emitted when prefetch finishes)\n' +
+      '- `stream-link`: `StreamLink` (Emitted for each found link during stream discovery)\n' +
+      '- `streams-complete`: `StreamLink[]` (Final list of all discovered and validated links)'
+    )
     .setVersion('1.0')
     .build();
   const document = SwaggerModule.createDocument(app, config);

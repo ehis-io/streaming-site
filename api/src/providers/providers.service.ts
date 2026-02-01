@@ -11,6 +11,10 @@ import axios from 'axios';
 export class ProvidersService {
   private readonly logger = new Logger(ProvidersService.name);
 
+  private readonly validationQueues = new Map<string, (() => Promise<void>)[]>();
+  private readonly activeValidations = new Map<string, number>();
+  private readonly MAX_CONCURRENT_PER_DOMAIN = 2;
+
   constructor(
     @Inject(SCRAPER_TOKEN) private scrapers: Scraper[],
     private tmdbService: TmdbService,
@@ -265,10 +269,52 @@ export class ProvidersService {
   }
 
   private async validateStream(url: string): Promise<boolean> {
+    const domain = new URL(url).hostname;
+    const isRestricted = domain.includes('vidsrc') ||
+      domain.includes('vidlink.pro') ||
+      domain.includes('gogoanime') ||
+      domain.includes('9animetv.be');
+
+    if (!isRestricted) {
+      return this.executeValidation(url);
+    }
+
+    // Rate limiting logic for restricted domains
+    return new Promise((resolve) => {
+      const queue = this.validationQueues.get(domain) || [];
+      const runValidation = async () => {
+        const active = this.activeValidations.get(domain) || 0;
+        this.activeValidations.set(domain, active + 1);
+
+        try {
+          const result = await this.executeValidation(url);
+          resolve(result);
+        } finally {
+          const newActive = (this.activeValidations.get(domain) || 1) - 1;
+          this.activeValidations.set(domain, newActive);
+          this.processQueue(domain);
+        }
+      };
+
+      if ((this.activeValidations.get(domain) || 0) < this.MAX_CONCURRENT_PER_DOMAIN) {
+        runValidation();
+      } else {
+        queue.push(runValidation);
+        this.validationQueues.set(domain, queue);
+      }
+    });
+  }
+
+  private processQueue(domain: string) {
+    const queue = this.validationQueues.get(domain);
+    if (queue && queue.length > 0 && (this.activeValidations.get(domain) || 0) < this.MAX_CONCURRENT_PER_DOMAIN) {
+      const next = queue.shift();
+      if (next) next();
+    }
+  }
+
+  private async executeValidation(url: string): Promise<boolean> {
     try {
-      // Simple head check or fetch first bytes?
-      // Some providers return 200 OK with "Video not found" text. 
-      // We'll scrape the content to check for error messages.
       const response = await axios.get(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -288,7 +334,6 @@ export class ProvidersService {
       }
       return true;
     } catch (e) {
-      // If it returns 404/500, it's invalid
       this.logger.debug(`Stream validation failed for ${url}: ${e.message}`);
       return false;
     }
