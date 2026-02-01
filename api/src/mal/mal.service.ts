@@ -71,4 +71,43 @@ export class MALService {
             this.animeEndpoint.getRecommendations(id)
         );
     }
+
+    async discover(params: any) {
+        const page = params.page ? parseInt(params.page) : 1;
+        const genres = params.with_genres;
+        const sortByParam = params.sort_by || 'popularity.desc';
+        const [sortField, sortDirection] = sortByParam.split('.');
+
+        let orderBy = 'popularity';
+        let sort = sortDirection || 'desc';
+
+        if (sortField === 'vote_average') {
+            orderBy = 'score';
+        } else if (sortField === 'primary_release_date') {
+            orderBy = 'start_date';
+        }
+
+        const queryParams: any = {
+            page,
+            order_by: orderBy,
+            sort,
+            sfw: true
+        };
+
+        if (genres) {
+            queryParams.genres = genres;
+        }
+
+        // Map standard TMDB date params to Jikan params
+        if (params['primary_release_date.gte']) {
+            queryParams.start_date = params['primary_release_date.gte'];
+        }
+        if (params['primary_release_date.lte']) {
+            queryParams.end_date = params['primary_release_date.lte'];
+        }
+
+        return this.getCachedRequest(`mal:discover:${JSON.stringify(queryParams)}`, () =>
+            this.animeEndpoint.search(queryParams)
+        );
+    }
 }

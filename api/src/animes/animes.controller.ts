@@ -21,6 +21,11 @@ export class AnimesController {
         return this.animesService.getGenres();
     }
 
+    @Get('discover')
+    discover(@Query() query: any) {
+        return this.animesService.discover(query);
+    }
+
     @Get(':id/recommendations')
     getRecommendations(@Param('id') id: string) {
         return this.animesService.getRecommendations(+id);

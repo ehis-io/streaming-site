@@ -62,10 +62,48 @@ export class AnimesService {
     }
 
     async getGenres() {
-        return this.malService.getGenres();
+        const data = await this.malService.getGenres();
+        // Jikan returns { data: [] }, frontend expects { genres: [] }
+        if (data && (data as any).data) {
+            return {
+                genres: (data as any).data.map((g: any) => ({
+                    id: g.mal_id,
+                    name: g.name
+                }))
+            };
+        }
+        return { genres: [] };
     }
 
     async getRecommendations(id: number) {
         return this.malService.getRecommendations(id);
+    }
+
+    async discover(params: any) {
+        const data = await this.malService.discover(params);
+        let results = [];
+
+        if (data && (data as any).data) {
+            results = (data as any).data.map((item: any) => ({
+                id: item.mal_id,
+                title: item.title,
+                poster_path: item.images?.jpg?.large_image_url,
+                vote_average: item.score,
+                release_date: item.aired?.from ? item.aired.from.split('T')[0] : null,
+                synopsis: this.cleanSynopsis(item.synopsis),
+                // Keep original data just in case
+                ...item
+            }));
+        }
+
+        // Map Jikan response to match TMDB structure expected by frontend
+        // Jikan returns { data: [], pagination: {} }
+        // Frontend expects { results: [], page: number, total_pages: number }
+        return {
+            results: results,
+            page: (data as any).pagination?.current_page || 1,
+            total_pages: (data as any).pagination?.last_visible_page || 1,
+            total_results: (data as any).pagination?.items?.total || 0
+        };
     }
 }

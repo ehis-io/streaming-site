@@ -31,7 +31,7 @@ export default function MovieCard({ id, title, posterPath, rating, year, type = 
                     unoptimized={imageUrl.startsWith('http') && !imageUrl.includes('tmdb.org')}
                 />
                 <div className={styles.overlay}>
-                    <div className={styles.rating}>{rating.toFixed(1)}</div>
+                    <div className={styles.rating}>{(rating || 0).toFixed(1)}</div>
                 </div>
             </div>
             <div className={styles.info}>

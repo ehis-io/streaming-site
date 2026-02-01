@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use, useMemo } from 'react';
 import Link from 'next/link';
+import Spinner from '@/components/Spinner';
 import styles from './page.module.css';
 import { config } from '@/config';
 
@@ -45,7 +46,7 @@ export default function MovieDetail({ params: paramsPromise }: { params: Promise
         setSelectedProvider(null);
 
         // Fetch movie details
-        fetch(`http://localhost:4001/api/v1/movies/${params.id}`)
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/movies/${params.id}`)
             .then(res => res.json())
             .then(data => {
                 setMovie(data);
@@ -53,7 +54,7 @@ export default function MovieDetail({ params: paramsPromise }: { params: Promise
             .catch(err => console.error('Movie fetch error:', err));
 
         // Fetch dynamic streams
-        fetch(`http://localhost:4001/api/v1/streams/${params.id}`)
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/streams/${params.id}`)
             .then(res => res.json())
             .then((links: StreamLink[]) => {
                 const providers = links.map((link, index) => ({
@@ -110,7 +111,7 @@ export default function MovieDetail({ params: paramsPromise }: { params: Promise
     }, []);
 
 
-    if (!movie) return <div className={styles.loading}>Loading...</div>;
+    if (!movie) return <Spinner />;
 
     const backdropUrl = movie.backdrop_path
         ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}`

@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import MovieCard from '@/components/MovieCard';
+import Spinner from '@/components/Spinner';
 import styles from './page.module.css';
 
 interface TVShow {
@@ -24,8 +25,8 @@ function TVContent() {
 
     useEffect(() => {
         const endpoint = searchQuery
-            ? `http://localhost:4001/api/v1/tv/search?q=${searchQuery}&page=${page}`
-            : `http://localhost:4001/api/v1/tv/trending?page=${page}`;
+            ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1/tv/search?q=${searchQuery}&page=${page}`
+            : `${process.env.NEXT_PUBLIC_API_URL}/api/v1/tv/trending?page=${page}`;
 
         fetch(endpoint)
             .then(res => res.json())
@@ -112,7 +113,7 @@ function TVContent() {
 
 export default function TVListing() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<Spinner />}>
             <TVContent />
         </Suspense>
     );

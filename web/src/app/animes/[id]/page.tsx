@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use, useMemo } from 'react';
 import Link from 'next/link';
+import Spinner from '@/components/Spinner';
 import styles from './page.module.css';
 import { config } from '@/config';
 
@@ -46,7 +47,7 @@ export default function AnimeDetail({ params: paramsPromise }: { params: Promise
         setSelectedProvider(null);
 
         // Fetch anime details
-        fetch(`http://localhost:4001/api/v1/animes/${params.id}`)
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/animes/${params.id}`)
             .then(res => res.json())
             .then(data => {
                 const animeData = {
@@ -63,7 +64,7 @@ export default function AnimeDetail({ params: paramsPromise }: { params: Promise
         setSelectedProvider(null);
 
         // Fetch dynamic streams
-        fetch(`http://localhost:4001/api/v1/streams/${params.id}?episode=${episode}&type=${type}&mediaType=anime`)
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/streams/${params.id}?episode=${episode}&type=${type}&mediaType=anime`)
             .then(res => res.json())
             .then((links: StreamLink[]) => {
                 const providers = links.map((link, index) => ({
@@ -116,7 +117,7 @@ export default function AnimeDetail({ params: paramsPromise }: { params: Promise
         return () => window.removeEventListener('message', handleMessage);
     }, []);
 
-    if (!anime) return <div className={styles.loading}>Loading...</div>;
+    if (!anime) return <Spinner />;
 
     return (
         <div className={styles.container}>

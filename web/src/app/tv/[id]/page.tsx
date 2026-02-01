@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use, useMemo } from 'react';
 import Link from 'next/link';
+import Spinner from '@/components/Spinner';
 import styles from './page.module.css';
 import { config } from '@/config';
 
@@ -53,7 +54,7 @@ export default function TVDetail({ params: paramsPromise }: { params: Promise<{ 
         setSelectedProvider(null);
 
         // Fetch TV show details
-        fetch(`http://localhost:4001/api/v1/tv/${params.id}`)
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/tv/${params.id}`)
             .then(res => res.json())
             .then(data => {
                 setShow(data);
@@ -61,7 +62,7 @@ export default function TVDetail({ params: paramsPromise }: { params: Promise<{ 
             .catch(err => console.error('TV fetch error:', err));
 
         // Fetch dynamic streams
-        fetch(`http://localhost:4001/api/v1/streams/${params.id}?season=${season}&episode=${episode}`)
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/streams/${params.id}?season=${season}&episode=${episode}`)
             .then(res => res.json())
             .then((links: StreamLink[]) => {
                 const providers = links.map((link, index) => ({
@@ -118,7 +119,7 @@ export default function TVDetail({ params: paramsPromise }: { params: Promise<{ 
         return () => window.removeEventListener('message', handleMessage);
     }, []);
 
-    if (!show) return <div className={styles.loading}>Loading...</div>;
+    if (!show) return <Spinner />;
 
     const backdropUrl = show.backdrop_path
         ? `https://image.tmdb.org/t/p/original${show.backdrop_path}`

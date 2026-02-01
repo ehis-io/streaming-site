@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import MovieCard from '@/components/MovieCard';
+import Spinner from '@/components/Spinner';
 import styles from './page.module.css';
 
 interface Movie {
@@ -25,8 +26,8 @@ function MoviesContent() {
 
     useEffect(() => {
         const endpoint = searchQuery
-            ? `http://localhost:4001/api/v1/movies/search?q=${searchQuery}&page=${page}`
-            : `http://localhost:4001/api/v1/movies/trending?page=${page}`;
+            ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1/movies/search?q=${searchQuery}&page=${page}`
+            : `${process.env.NEXT_PUBLIC_API_URL}/api/v1/movies/trending?page=${page}`;
 
         fetch(endpoint)
             .then(res => res.json())
@@ -113,7 +114,7 @@ function MoviesContent() {
 
 export default function MoviesPage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<Spinner />}>
             <MoviesContent />
         </Suspense>
     );

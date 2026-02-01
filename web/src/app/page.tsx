@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import MovieCard from '@/components/MovieCard';
+import Spinner from '@/components/Spinner';
 import styles from './page.module.css';
 
 interface Movie {
@@ -13,7 +14,7 @@ interface Movie {
   vote_average: number;
   release_date?: string;
   first_air_date?: string;
-  media_type?: 'movie' | 'tv';
+  media_type?: 'movie' | 'tv' | 'anime';
 }
 
 function HomeContent() {
@@ -26,8 +27,8 @@ function HomeContent() {
 
   useEffect(() => {
     const endpoint = searchQuery
-      ? `http://localhost:4001/api/v1/search?q=${searchQuery}&page=${page}`
-      : `http://localhost:4001/api/v1/trending?page=${page}`;
+      ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1/search?q=${searchQuery}&page=${page}`
+      : `${process.env.NEXT_PUBLIC_API_URL}/api/v1/trending?page=${page}`;
 
     fetch(endpoint)
       .then(res => res.json())
@@ -114,7 +115,7 @@ function HomeContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<Spinner />}>
       <HomeContent />
     </Suspense>
   );
