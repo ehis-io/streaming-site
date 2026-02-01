@@ -5,24 +5,16 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import MovieCard from '@/components/MovieCard';
 import Spinner from '@/components/Spinner';
 import styles from './page.module.css';
+import { Content } from '@/types';
 
-interface Movie {
-  id: number;
-  title?: string;
-  name?: string;
-  poster_path?: string;
-  vote_average: number;
-  release_date?: string;
-  first_air_date?: string;
-  media_type?: 'movie' | 'tv' | 'anime';
-}
+
 
 function HomeContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
   const searchQuery = searchParams.get('q') || '';
-  const [movies, setMovies] = useState<Movie[]>([]);
+  const [movies, setMovies] = useState<Content[]>([]);
   const [page, setPage] = useState(1);
 
   useEffect(() => {

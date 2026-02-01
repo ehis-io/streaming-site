@@ -5,31 +5,16 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import MovieCard from '@/components/MovieCard';
 import Spinner from '@/components/Spinner';
 import styles from './page.module.css';
+import { Content } from '@/types';
 
-interface Anime {
-    id: number;
-    title?: string;
-    name?: string;
-    image_url?: string; // Jikan uses image_url or similar
-    images?: {
-        jpg?: {
-            large_image_url?: string;
-        }
-    };
-    score?: number;
-    aired?: {
-        from?: string;
-    };
-    year?: number;
-    type?: string;
-}
+
 
 function AnimesContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const pathname = usePathname();
     const searchQuery = searchParams.get('q') || '';
-    const [animes, setAnimes] = useState<any[]>([]);
+    const [animes, setAnimes] = useState<Content[]>([]);
     const [page, setPage] = useState(1);
 
     useEffect(() => {
@@ -90,9 +75,9 @@ function AnimesContent() {
                                 key={anime.mal_id || anime.id}
                                 id={anime.mal_id || anime.id}
                                 title={anime.title || anime.name || 'Untitled'}
-                                posterPath={anime.images?.jpg?.large_image_url || anime.image_url || anime.poster_path || ''}
+                                posterPath={anime.images?.jpg?.image_url || anime.poster_path || ''}
                                 rating={anime.score || anime.vote_average || 0}
-                                year={(anime.year || (anime.aired?.from || '').split('-')[0]) || ''}
+                                year={(anime.aired?.from ? String(anime.aired.from).split('-')[0] : '') || (anime.first_air_date ? String(anime.first_air_date).split('-')[0] : '')}
                                 type="animes"
                             />
                         ))

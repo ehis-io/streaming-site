@@ -4,35 +4,14 @@ import { useEffect, useState, use, useMemo } from 'react';
 import Link from 'next/link';
 import Spinner from '@/components/Spinner';
 import styles from './page.module.css';
+import { Content, Provider, StreamLink } from '@/types';
 
 
-interface Provider {
-    id: string;
-    name: string;
-    embedUrl: string;
-}
 
-interface Movie {
-    id: number;
-    title?: string;
-    name?: string;
-    backdrop_path: string;
-    release_date?: string;
-    first_air_date?: string;
-    runtime?: number;
-    vote_average: number;
-    overview: string;
-    localProviders: Provider[];
-}
-
-interface StreamLink {
-    provider: string;
-    url: string;
-}
 
 export default function MovieDetail({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
     const params = use(paramsPromise);
-    const [movie, setMovie] = useState<Movie | null>(null);
+    const [movie, setMovie] = useState<Content | null>(null);
     const [dynamicProviders, setDynamicProviders] = useState<Provider[]>([]);
     const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
 

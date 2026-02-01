@@ -5,22 +5,15 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import MovieCard from '@/components/MovieCard';
 import Spinner from '@/components/Spinner';
 import styles from './page.module.css';
+import { Content } from '@/types';
 
-interface TVShow {
-    id: number;
-    name?: string;
-    original_name?: string;
-    poster_path?: string;
-    vote_average: number;
-    first_air_date?: string;
-}
 
 function TVContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const pathname = usePathname();
     const searchQuery = searchParams.get('q') || '';
-    const [shows, setShows] = useState<TVShow[]>([]);
+    const [shows, setShows] = useState<Content[]>([]);
     const [page, setPage] = useState(1);
 
     useEffect(() => {

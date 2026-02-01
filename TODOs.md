@@ -32,9 +32,9 @@
 - [ ] **Caching Strategy**: Implement Redis or a more robust caching layer to reduce API hits to TMDB/Jikan.
 - [ ] **Rate Limiting**: Add global rate limiting to protect the API from abuse.
 - [ ] **Logging**: Integrate a logging service (e.g., Winston/Morgan) for better observability.
-- [ ] **Validation**: Strengthen DTO validation for all search and filter parameters.
-- [ ] **API Documentation**: Auto-generate Swagger/OpenAPI documentation for the endpoints.
+- [x] **Validation**: Strengthen DTO validation for all search and filter parameters.
+- [x] **API Documentation**: Auto-generate Swagger/OpenAPI documentation for the endpoints.
 
 ### Bug Fixes / Refactoring
-- [ ] **Standardize Types**: Ensure strict type sharing between frontend and backend where possible (or use a monorepo structure with a shared package).
-- [ ] **Error Handling**: Standardize error responses across all modules (Movies, TV, Animes).
+- [x] **Standardize Types**: Ensure strict type sharing between frontend and backend where possible (or use a monorepo structure with a shared package).
+- [x] **Error Handling**: Standardize error responses across all modules (Movies, TV, Animes).
