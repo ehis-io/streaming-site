@@ -244,6 +244,16 @@
     .select {
         max-width: 100%;
     }
+
+    .controlGroup {
+        flex: 1 1 calc(50% - 0.5rem);
+        min-width: 0;
+    }
+
+    .controlsBar {
+        padding: 1rem;
+        gap: 1rem;
+    }
 }
 
 .recommendations {
