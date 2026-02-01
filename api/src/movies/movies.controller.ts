@@ -28,6 +28,11 @@ export class MoviesController {
     return this.moviesService.discover(query);
   }
 
+  @Get(':id/recommendations')
+  getRecommendations(@Param('id') id: string) {
+    return this.moviesService.getRecommendations(+id);
+  }
+
   @Get(':id')
   getDetails(@Param('id') id: string) {
     return this.moviesService.getDetails(+id);

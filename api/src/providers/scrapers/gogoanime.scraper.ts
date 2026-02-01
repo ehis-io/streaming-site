@@ -22,7 +22,7 @@ export class GogoAnimeScraper implements Scraper {
 
     async search(query: string, tmdbId?: number, imdbId?: string, malId?: number): Promise<ScraperSearchResult[]> {
         try {
-            const searchUrl = `${this.baseUrl}/?s=${encodeURIComponent(query)}`;
+            const searchUrl = `${this.baseUrl}/?s=${encodeURIComponent(query).replace(/%20/g, '+')}`;
             this.logger.log(`GogoAnime searching: ${searchUrl}`);
 
             const response = await axios.get(searchUrl, {

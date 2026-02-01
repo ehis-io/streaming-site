@@ -82,7 +82,7 @@ function HomeContent() {
                 posterPath={movie.poster_path || ''}
                 rating={movie.vote_average}
                 year={(movie.release_date || movie.first_air_date || '').split('-')[0]}
-                type={movie.media_type || 'movie'}
+                type={movie.media_type === 'movie' ? 'movies' : (movie.media_type || 'movies')}
               />
             ))
           ) : (

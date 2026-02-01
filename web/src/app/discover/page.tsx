@@ -5,6 +5,7 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import MovieCard from '@/components/MovieCard';
 import Spinner from '@/components/Spinner';
 import styles from './page.module.css';
+import { usePrefetch } from '@/hooks/usePrefetch';
 
 interface Genre {
     id: number;
@@ -19,6 +20,7 @@ interface Content {
     vote_average: number;
     release_date?: string;
     first_air_date?: string;
+    media_type?: 'movie' | 'tv' | 'anime';
 }
 
 function DiscoverContent() {
@@ -26,7 +28,7 @@ function DiscoverContent() {
     const router = useRouter();
     const pathname = usePathname();
 
-    const type = searchParams.get('type') || 'movie';
+    const type = searchParams.get('type') || 'movies';
     const genreId = searchParams.get('genre') || '';
     const sortBy = searchParams.get('sort') || 'popularity.desc';
     const yearFilter = searchParams.get('year') || 'all';
@@ -36,10 +38,11 @@ function DiscoverContent() {
     const [genres, setGenres] = useState<Genre[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showAlphabetPopup, setShowAlphabetPopup] = useState(false);
+    const { prefetch } = usePrefetch();
 
     // Fetch genres when type changes
     useEffect(() => {
-        const endpoint = type === 'anime' ? 'animes' : (type === 'movie' ? 'movies' : 'tv');
+        const endpoint = type === 'anime' ? 'animes' : (type === 'tv' ? 'tv' : 'movies');
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/${endpoint}/genres`)
             .then(res => res.json())
             .then(data => setGenres(data.genres || []))
@@ -93,18 +96,22 @@ function DiscoverContent() {
             ...dateParams
         });
 
-        const endpoint = type === 'anime' ? 'animes' : (type === 'movie' ? 'movies' : 'tv');
+        const endpoint = type === 'anime' ? 'animes' : (type === 'tv' ? 'tv' : 'movies');
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/${endpoint}/discover?${params.toString()}`)
             .then(res => res.json())
             .then(data => {
-                setResults(data.results || []);
+                const resultsList = data.results || [];
+                setResults(resultsList);
+                if (resultsList.length > 0) {
+                    prefetch(resultsList, type === 'anime' ? 'anime' : (type === 'tv' ? 'tv' : 'movie'));
+                }
                 setIsLoading(false);
             })
             .catch(err => {
                 console.error('Discover fetch error:', err);
                 setIsLoading(false);
             });
-    }, [type, genreId, sortBy, yearFilter, page]);
+    }, [type, genreId, sortBy, yearFilter, page, prefetch]);
 
     const updateFilter = (updates: Record<string, string | number | undefined>) => {
         const params = new URLSearchParams(searchParams);
@@ -132,7 +139,7 @@ function DiscoverContent() {
                             onChange={(e) => updateFilter({ type: e.target.value, genre: '', page: 1 })}
                             className={styles.select}
                         >
-                            <option value="movie">Movies</option>
+                            <option value="movies">Movies</option>
                             {/* <option value="anime">Animes</option> */}
                             <option value="tv">TV Shows</option>
                         </select>
@@ -226,7 +233,7 @@ function DiscoverContent() {
                                     posterPath={item.poster_path || ''}
                                     rating={item.vote_average}
                                     year={(item.release_date || item.first_air_date || '').split('-')[0]}
-                                    type={type === 'anime' ? 'animes' : (type as 'movie' | 'tv')}
+                                    type={type === 'anime' ? 'animes' : (type as 'movies' | 'tv')}
                                 />
                             ))
                         ) : (

@@ -28,6 +28,11 @@ export class TvController {
     return this.tvService.discover(query);
   }
 
+  @Get(':id/recommendations')
+  getRecommendations(@Param('id') id: string) {
+    return this.tvService.getRecommendations(+id);
+  }
+
   @Get(':id')
   getDetails(@Param('id') id: string) {
     return this.tvService.getDetails(+id);

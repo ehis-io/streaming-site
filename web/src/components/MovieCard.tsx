@@ -11,15 +11,17 @@ interface MovieCardProps {
     type?: string;
 }
 
-export default function MovieCard({ id, title, posterPath, rating, year, type = 'movie' }: MovieCardProps) {
+export default function MovieCard({ id, title, posterPath, rating, year, type = 'movies' }: MovieCardProps) {
     const imageUrl = posterPath
         ? (posterPath.startsWith('http') ? posterPath : `https://image.tmdb.org/t/p/w500${posterPath}`)
         : 'https://via.placeholder.com/500x750?text=No+Poster';
 
     const displayYear = typeof year === 'string' ? year.split('-')[0] : year;
 
+    const route = type === 'movie' ? 'movies' : type;
+
     return (
-        <Link href={`/${type}/${id}`} className={styles.card}>
+        <Link href={`/${route}/${id}`} className={styles.card}>
             <div className={styles.imageWrapper}>
                 <Image
                     src={imageUrl}

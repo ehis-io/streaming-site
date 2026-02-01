@@ -28,7 +28,14 @@ export class ProvidersService {
     return this.scrapers;
   }
 
-  async findStreamLinks(id: string, season?: number, episode?: number, type: 'sub' | 'dub' = 'sub', mediaType?: string): Promise<StreamLink[]> {
+  async findStreamLinks(
+    id: string,
+    season?: number,
+    episode?: number,
+    type: 'sub' | 'dub' = 'sub',
+    mediaType?: string,
+    onLinkFound?: (link: StreamLink) => void
+  ): Promise<StreamLink[]> {
     const cacheKey = `streams:${id}:${season || ''}:${episode || ''}:${mediaType || ''}`;
     const cached = await this.cacheManager.get<StreamLink[]>(cacheKey);
     if (cached) {
@@ -187,6 +194,7 @@ export class ProvidersService {
         for (const link of flatLinks) {
           if (await this.validateStream(link.url)) {
             validLinks.push(link);
+            if (onLinkFound) onLinkFound(link); // REPORT REAL-TIME
           } else {
             this.logger.warn(`Filtered out invalid stream: ${link.url}`);
           }
@@ -290,7 +298,10 @@ export class ProvidersService {
    * Proactively resolve and cache links for a batch of media items.
    * This runs in the background to avoid blocking the main thread.
    */
-  async prefetchLinks(items: { id: string, mediaType: 'movie' | 'tv' | 'anime', title?: string }[]) {
+  async prefetchLinks(
+    items: { id: string, mediaType: 'movie' | 'tv' | 'anime', title?: string }[],
+    onLinkFound?: (id: string, link: StreamLink) => void
+  ) {
     this.logger.log(`Queueing prefetch for ${items.length} items`);
 
     // Simple background queue to avoid overloading
@@ -323,7 +334,8 @@ export class ProvidersService {
             item.mediaType === 'tv' ? 1 : undefined,
             item.mediaType === 'tv' ? 1 : (item.mediaType === 'anime' ? 1 : undefined),
             'sub',
-            item.mediaType
+            item.mediaType,
+            onLinkFound ? (link) => onLinkFound(item.id, link) : undefined
           );
         } catch (err) {
           this.logger.debug(`Background prefetch failed for ${item.id}: ${err.message}`);

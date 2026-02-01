@@ -5,6 +5,7 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import MovieCard from '@/components/MovieCard';
 import Spinner from '@/components/Spinner';
 import styles from './page.module.css';
+import { usePrefetch } from '@/hooks/usePrefetch';
 
 function SearchResults() {
     const searchParams = useSearchParams();
@@ -18,6 +19,7 @@ function SearchResults() {
     const [tv, setTv] = useState<any[]>([]);
     const [animes, setAnimes] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const { prefetch } = usePrefetch();
 
     useEffect(() => {
         if (!query) {
@@ -31,15 +33,25 @@ function SearchResults() {
             fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/tv/search?q=${query}&page=${page}`).then(res => res.json()).catch(() => ({ results: [] })),
             fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/animes/search?q=${query}&page=${page}`).then(res => res.json()).catch(() => ({ data: [] }))
         ]).then(([moviesData, tvData, animesData]) => {
-            setMovies(moviesData.results || []);
-            setTv(tvData.results || []);
-            setAnimes(animesData.data || []);
+            const movieResults = moviesData.results || [];
+            const tvResults = tvData.results || [];
+            const animeResults = animesData.data || [];
+
+            setMovies(movieResults);
+            setTv(tvResults);
+            setAnimes(animeResults);
+
+            // Prefetch each category in background
+            if (movieResults.length > 0) prefetch(movieResults, 'movie');
+            if (tvResults.length > 0) prefetch(tvResults, 'tv');
+            if (animeResults.length > 0) prefetch(animeResults, 'anime');
+
         }).catch(err => {
             console.error('Search failed', err);
         }).finally(() => {
             setIsLoading(false);
         });
-    }, [query, page]);
+    }, [query, page, prefetch]);
 
     const updatePage = (newPage: number) => {
         const params = new URLSearchParams(searchParams);
@@ -85,7 +97,7 @@ function SearchResults() {
                                 posterPath={item.poster_path}
                                 rating={item.vote_average}
                                 year={item.release_date}
-                                type="movie"
+                                type="movies"
                             />
                         ))}
                     </div>

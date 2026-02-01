@@ -2,8 +2,11 @@
 
 import { useEffect, useState, use, useMemo } from 'react';
 import Link from 'next/link';
+import MovieCard from '@/components/MovieCard';
 import Spinner from '@/components/Spinner';
 import styles from './page.module.css';
+import { usePrefetch } from '@/hooks/usePrefetch';
+import { useStreams } from '@/hooks/useStreams';
 
 interface Provider {
     id: string;
@@ -27,22 +30,32 @@ interface Anime {
     localProviders: Provider[];
 }
 
-interface StreamLink {
-    provider: string;
-    url: string;
-}
-
 export default function AnimeDetail({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
     const params = use(paramsPromise);
     const [anime, setAnime] = useState<Anime | null>(null);
-    const [dynamicProviders, setDynamicProviders] = useState<Provider[]>([]);
+    const [recommendations, setRecommendations] = useState<any[]>([]);
     const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
     const [episode, setEpisode] = useState(1);
     const [type, setType] = useState<'sub' | 'dub'>('sub');
+    const { prefetch } = usePrefetch();
+
+    const { links: streamLinks } = useStreams(useMemo(() => ({
+        id: params.id,
+        episode,
+        type,
+        mediaType: 'anime'
+    }), [params.id, episode, type]));
+
+    const dynamicProviders = useMemo(() => {
+        return streamLinks.map((link, index) => ({
+            id: `dynamic-${index}`,
+            name: link.provider || 'Auto',
+            embedUrl: link.url
+        }));
+    }, [streamLinks]);
 
     useEffect(() => {
         setAnime(null);
-        setDynamicProviders([]);
         setSelectedProvider(null);
 
         // Fetch anime details
@@ -56,25 +69,20 @@ export default function AnimeDetail({ params: paramsPromise }: { params: Promise
                 setAnime(animeData);
             })
             .catch(err => console.error('Anime fetch error:', err));
-    }, [params.id]);
 
-    useEffect(() => {
-        setDynamicProviders([]);
-        setSelectedProvider(null);
-
-        // Fetch dynamic streams
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/streams/${params.id}?episode=${episode}&type=${type}&mediaType=anime`)
+        // Fetch recommendations
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/animes/${params.id}/recommendations`)
             .then(res => res.json())
-            .then((links: StreamLink[]) => {
-                const providers = links.map((link, index) => ({
-                    id: `dynamic-${index}`,
-                    name: link.provider,
-                    embedUrl: link.url
-                }));
-                setDynamicProviders(providers);
+            .then(data => {
+                const results = data.data || [];
+                setRecommendations(results);
+                if (results.length > 0) {
+                    const items = results.map((r: any) => r.entry);
+                    prefetch(items, 'anime');
+                }
             })
-            .catch(err => console.error('Streams fetch error:', err));
-    }, [params.id, episode, type]);
+            .catch(err => console.error('Recommendations fetch error:', err));
+    }, [params.id, prefetch]);
 
     const allProviders = useMemo(() => {
         const local = anime?.localProviders || [];
@@ -93,22 +101,11 @@ export default function AnimeDetail({ params: paramsPromise }: { params: Promise
         }
     }, [allProviders, selectedProvider]);
 
-    // VidLink Event Listeners for Watch Progress
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
             if (event.origin !== 'https://vidlink.pro') return;
-
-            // Handle watch progress data
             if (event.data?.type === 'MEDIA_DATA') {
-                const mediaData = event.data.data;
-                console.log('VidLink Anime: Received media progress data', mediaData);
-                localStorage.setItem('vidLinkProgress', JSON.stringify(mediaData));
-            }
-
-            // Handle player events
-            if (event.data?.type === 'PLAYER_EVENT') {
-                const { event: eventType, currentTime, duration, mediaType } = event.data.data;
-                console.log(`VidLink Anime Player Event: ${eventType} at ${currentTime}s of ${duration}s (${mediaType})`);
+                localStorage.setItem('vidLinkProgress', JSON.stringify(event.data.data));
             }
         };
 
@@ -145,8 +142,8 @@ export default function AnimeDetail({ params: paramsPromise }: { params: Promise
                     ) : (
                         <div className={styles.noPlayer}>
                             <div className={styles.noPlayerContent}>
-                                <p>No streams found for this anime (Episode {episode}).</p>
-                                <span>Check back later or try another source.</span>
+                                <p>Resolving stream links (Episode {episode})...</p>
+                                <Spinner />
                             </div>
                         </div>
                     )}
@@ -157,7 +154,7 @@ export default function AnimeDetail({ params: paramsPromise }: { params: Promise
                             <select
                                 className={styles.select}
                                 value={episode}
-                                onChange={(e) => setEpisode(Number(e.target.value))}
+                                onChange={(e) => { setEpisode(Number(e.target.value)); setSelectedProvider(null); }}
                             >
                                 {Array.from({ length: anime.episodes || 1 }, (_, i) => i + 1).map(num => (
                                     <option key={num} value={num}>
@@ -172,7 +169,7 @@ export default function AnimeDetail({ params: paramsPromise }: { params: Promise
                             <select
                                 className={styles.select}
                                 value={type}
-                                onChange={(e) => setType(e.target.value as 'sub' | 'dub')}
+                                onChange={(e) => { setType(e.target.value as 'sub' | 'dub'); setSelectedProvider(null); }}
                             >
                                 <option value="sub">Subtitled</option>
                                 <option value="dub">Dubbed</option>
@@ -210,6 +207,25 @@ export default function AnimeDetail({ params: paramsPromise }: { params: Promise
                     </div>
                     <p className={styles.overview}>{anime.synopsis || 'No synopsis available.'}</p>
                 </div>
+
+                {recommendations.length > 0 && (
+                    <section className={styles.recommendations}>
+                        <h2 className={styles.recommendationsTitle}>Recommended for You</h2>
+                        <div className={styles.recommendationsGrid}>
+                            {recommendations.slice(0, 12).map(item => (
+                                <MovieCard
+                                    key={`rec-${item.entry.mal_id}`}
+                                    id={item.entry.mal_id}
+                                    title={item.entry.title}
+                                    posterPath={item.entry.images?.jpg?.large_image_url}
+                                    rating={0}
+                                    year={""}
+                                    type="animes"
+                                />
+                            ))}
+                        </div>
+                    </section>
+                )}
             </div>
         </div>
     );

@@ -50,7 +50,7 @@ export default function Header() {
                     ...(movies.results || []).slice(0, 3).map((m: any) => ({
                         ...m,
                         type: 'movie',
-                        routeType: 'movie',
+                        routeType: 'movies',
                         title: m.title,
                         year: m.release_date?.split('-')[0],
                         poster: m.poster_path

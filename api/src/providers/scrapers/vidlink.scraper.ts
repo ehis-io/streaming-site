@@ -6,16 +6,13 @@ import { Scraper, ScraperSearchResult, StreamLink } from '../scraper.interface';
 export class VidLinkScraper implements Scraper {
   name = 'VidLink';
   priority = 5;
+  supportedTypes = ['movie', 'tv'];
   private readonly logger = new Logger(VidLinkScraper.name);
   private readonly baseUrl = 'https://vidlink.pro';
 
   constructor(private configService: ConfigService) { }
 
   async search(query: string, tmdbId?: number, imdbId?: string, malId?: number): Promise<ScraperSearchResult[]> {
-    // TEMP: Skip VidLink for now
-    this.logger.debug('VidLink temporarily disabled');
-    return [];
-
     if (malId) {
       return [{
         title: `${query} (VidLink Anime)`,

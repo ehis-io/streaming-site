@@ -2,25 +2,38 @@
 
 import { useEffect, useState, use, useMemo } from 'react';
 import Link from 'next/link';
+import MovieCard from '@/components/MovieCard';
 import Spinner from '@/components/Spinner';
 import styles from './page.module.css';
-import { Content, Provider, StreamLink } from '@/types';
-
-
-
+import { Content, Provider } from '@/types';
+import { usePrefetch } from '@/hooks/usePrefetch';
+import { useStreams } from '@/hooks/useStreams';
 
 export default function MovieDetail({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
     const params = use(paramsPromise);
     const [movie, setMovie] = useState<Content | null>(null);
-    const [dynamicProviders, setDynamicProviders] = useState<Provider[]>([]);
+    const [recommendations, setRecommendations] = useState<Content[]>([]);
     const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
+    const { prefetch } = usePrefetch();
+
+    const { links: streamLinks } = useStreams(useMemo(() => ({
+        id: params.id,
+        type: 'sub',
+        mediaType: 'movie'
+    }), [params.id]));
+
+    // Map StreamLinks to Providers
+    const dynamicProviders = useMemo(() => {
+        return streamLinks.map((link, index) => ({
+            id: `dynamic-${index}`,
+            name: link.provider || 'Auto',
+            embedUrl: link.url
+        }));
+    }, [streamLinks]);
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setMovie(null);
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setDynamicProviders([]);
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setRecommendations([]);
         setSelectedProvider(null);
 
         // Fetch movie details
@@ -31,26 +44,24 @@ export default function MovieDetail({ params: paramsPromise }: { params: Promise
             })
             .catch(err => console.error('Movie fetch error:', err));
 
-        // Fetch dynamic streams
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/streams/${params.id}`)
+        // Fetch recommendations
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/movies/${params.id}/recommendations`)
             .then(res => res.json())
-            .then((links: StreamLink[]) => {
-                const providers = links.map((link, index) => ({
-                    id: `dynamic-${index}`,
-                    name: link.provider,
-                    embedUrl: link.url
-                }));
-                setDynamicProviders(providers);
+            .then(data => {
+                const results = data.results || [];
+                setRecommendations(results);
+                if (results.length > 0) {
+                    prefetch(results, 'movie');
+                }
             })
-            .catch(err => console.error('Streams fetch error:', err));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [params.id]);
+            .catch(err => console.error('Recommendations fetch error:', err));
+    }, [params.id, prefetch]);
 
     const allProviders = useMemo(() => {
         const local = movie?.localProviders || [];
         const dynamic = dynamicProviders;
 
-        // Deduplicate providers to prevent key collisions (handling potential HMR state artifacts)
+        // Deduplicate providers
         const seen = new Set<string>();
         return [...local, ...dynamic].filter(p => {
             if (seen.has(String(p.id))) return false;
@@ -70,24 +81,15 @@ export default function MovieDetail({ params: paramsPromise }: { params: Promise
         const handleMessage = (event: MessageEvent) => {
             if (event.origin !== 'https://vidlink.pro') return;
 
-            // Handle watch progress data
             if (event.data?.type === 'MEDIA_DATA') {
                 const mediaData = event.data.data;
-                console.log('VidLink: Received media progress data', mediaData);
                 localStorage.setItem('vidLinkProgress', JSON.stringify(mediaData));
-            }
-
-            // Handle player events
-            if (event.data?.type === 'PLAYER_EVENT') {
-                const { event: eventType, currentTime, duration, mediaType } = event.data.data;
-                console.log(`VidLink Player Event: ${eventType} at ${currentTime}s of ${duration}s (${mediaType})`);
             }
         };
 
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
     }, []);
-
 
     if (!movie) return <Spinner />;
 
@@ -122,8 +124,8 @@ export default function MovieDetail({ params: paramsPromise }: { params: Promise
                     ) : (
                         <div className={styles.noPlayer}>
                             <div className={styles.noPlayerContent}>
-                                <p>No streams found for this movie.</p>
-                                <span>Check back later or try another source.</span>
+                                <p>Resolving stream links...</p>
+                                <Spinner />
                             </div>
                         </div>
                     )}
@@ -160,6 +162,24 @@ export default function MovieDetail({ params: paramsPromise }: { params: Promise
                     <p className={styles.overview}>{movie.overview || 'No overview available.'}</p>
                 </div>
 
+                {recommendations.length > 0 && (
+                    <section className={styles.recommendations}>
+                        <h2 className={styles.recommendationsTitle}>Recommended for You</h2>
+                        <div className={styles.recommendationsGrid}>
+                            {recommendations.slice(0, 12).map(item => (
+                                <MovieCard
+                                    key={`rec-${item.id}`}
+                                    id={item.id}
+                                    title={item.title || item.name}
+                                    posterPath={item.poster_path || ''}
+                                    rating={item.vote_average}
+                                    year={(item.release_date || item.first_air_date || '').split('-')[0]}
+                                    type="movies"
+                                />
+                            ))}
+                        </div>
+                    </section>
+                )}
             </div>
         </div>
     );
