@@ -20,10 +20,10 @@
     -webkit-backdrop-filter: blur(20px);
     width: 90%;
     max-width: 800px;
-    max-height: 90vh;
+    max-height: 85vh;
     border-radius: 24px;
     position: relative;
-    padding: 2.5rem;
+    padding: 2rem;
     overflow-y: auto;
     animation: modalSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -33,7 +33,7 @@
 }
 
 :global([data-theme='light']) .modal {
-    background: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.4);
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
     border: 1px solid rgba(0, 0, 0, 0.08);
@@ -66,7 +66,7 @@
 }
 
 .header {
-    padding: 2rem;
+    padding: 1rem 2rem;
     text-align: center;
     background: linear-gradient(to bottom, rgba(229, 9, 20, 0.05), transparent);
 }
@@ -225,11 +225,65 @@
     }
 }
 
+@keyframes modalSlide {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
 @media (max-width: 640px) {
+    .overlay {
+        align-items: flex-start;
+        padding-top: 5vh;
+    }
+
     .modal {
-        height: 100%;
-        max-height: 100%;
-        border-radius: 0;
+        width: 95%;
+        max-height: 80vh;
+        border-radius: 20px;
+        padding: 1.25rem;
+        margin-top: 0;
+    }
+
+    .header {
+        padding: 0.5rem 1rem;
+    }
+
+    .header h2 {
+        font-size: 1.5rem;
+    }
+
+    .header p {
+        font-size: 0.85rem;
+    }
+
+    .inputSection {
+        padding: 0 1rem 1rem;
+    }
+
+    .textarea {
+        min-height: 80px !important;
+        padding: 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .closeBtn {
+        top: 1rem;
+        right: 1rem;
+        width: 32px;
+        height: 32px;
+        font-size: 1.2rem;
+    }
+
+    .generateBtn {
+        padding: 1rem;
+        margin-top: 1rem;
     }
 
     .resultsGrid {

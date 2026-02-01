@@ -93,6 +93,12 @@ add a feature where users can ask AI to generate movie playlists for them. The b
 
 when in black theme the Ask Ai... button should be white or red from the theme colors.
 
+Manual Verification
+Click "Ask AI..." in header.
+Type: "I like space horror movies like Alien".
+Verify that the resulting playlist contains relevant titles.
+Click a result and verify it leads to the correct detail page.
+
 add another feature where users can share their watchlists with their friends and also see their friends watchlists. 
 
 add another feature called popcorn where users can watch a movie or a show with their friends in real time. 
