@@ -45,6 +45,7 @@ function DiscoverContent() {
     const [genres, setGenres] = useState<Genre[]>([]);
     const [producers, setProducers] = useState<Producer[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [showAlphabetPopup, setShowAlphabetPopup] = useState(false);
     const { prefetch } = usePrefetch();
 
@@ -110,6 +111,8 @@ function DiscoverContent() {
     // Fetch discovered content
     useEffect(() => {
         setIsLoading(true);
+        setError(null);
+        setResults([]); // Clear previous results immediately on filter change
         const dateParams = getDateParams();
         const params = new URLSearchParams({
             page: String(page),
@@ -136,6 +139,7 @@ function DiscoverContent() {
             })
             .catch(err => {
                 console.error('Discover fetch error:', err);
+                setError('Failed to fetch content. Please try again later.');
                 setIsLoading(false);
             });
     }, [type, genreId, sortBy, yearFilter, minRating, studioId, page, prefetch]);
@@ -281,65 +285,81 @@ function DiscoverContent() {
             <section className={styles.section}>
                 {isLoading ? (
                     <Spinner />
+                ) : error ? (
+                    <div className={styles.errorState}>
+                        <p>{error}</p>
+                        <button onClick={() => window.location.reload()} className={styles.retryBtn}>Retry</button>
+                    </div>
                 ) : (
-                    <div className={styles.grid}>
+                    <div className={styles.gridContainer}>
                         {results.length > 0 ? (
-                            results.map(item => (
-                                <MovieCard
-                                    key={`${type}-${item.id}`}
-                                    id={item.id}
-                                    title={item.title || item.name || 'Untitled'}
-                                    posterPath={item.poster_path || ''}
-                                    rating={item.vote_average}
-                                    year={(item.release_date || item.first_air_date || '').split('-')[0]}
-                                    type={type === 'anime' ? 'animes' : (type as 'movies' | 'tv')}
-                                />
-                            ))
+                            <div className={styles.grid}>
+                                {results.map(item => (
+                                    <MovieCard
+                                        key={`${type}-${item.id}`}
+                                        id={item.id}
+                                        title={item.title || item.name || 'Untitled'}
+                                        posterPath={item.poster_path || ''}
+                                        rating={item.vote_average}
+                                        year={(item.release_date || item.first_air_date || '').split('-')[0]}
+                                        type={type === 'anime' ? 'animes' : (type as 'movies' | 'tv')}
+                                    />
+                                ))}
+                            </div>
                         ) : (
-                            <p>No results found for these filters.</p>
+                            <div className={styles.noResults}>
+                                <div className={styles.noResultsIcon}>🔍</div>
+                                <h3>No results found</h3>
+                                <p>Try adjusting your filters or search criteria to find what you're looking for.</p>
+                                <button onClick={() => updateFilter({ genre: '', year: 'all', rating: '0', studio: '' })} className={styles.clearBtn}>
+                                    Clear All Filters
+                                </button>
+                            </div>
                         )}
                     </div>
                 )}
 
-                <div className={styles.pagination}>
-                    <button
-                        className={styles.navBtn}
-                        onClick={() => updateFilter({ page: page - 1 })}
-                        disabled={page <= 1}
-                    >
-                        Previous
-                    </button>
+                {results.length > 0 && !isLoading && (
+                    <div className={styles.pagination}>
+                        <button
+                            className={styles.navBtn}
+                            onClick={() => updateFilter({ page: page - 1 })}
+                            disabled={page <= 1}
+                        >
+                            Previous
+                        </button>
 
-                    <div className={styles.pageNumbers}>
-                        {page > 1 && (
+                        <div className={styles.pageNumbers}>
+                            {page > 1 && (
+                                <button
+                                    className={`${styles.pageNumber} ${styles.fadedPage}`}
+                                    onClick={() => updateFilter({ page: page - 1 })}
+                                >
+                                    {page - 1}
+                                </button>
+                            )}
+
+                            <button className={`${styles.pageNumber} ${styles.activePage}`}>
+                                {page}
+                            </button>
+
                             <button
                                 className={`${styles.pageNumber} ${styles.fadedPage}`}
-                                onClick={() => updateFilter({ page: page - 1 })}
+                                onClick={() => updateFilter({ page: page + 1 })}
                             >
-                                {page - 1}
+                                {page + 1}
                             </button>
-                        )}
-
-                        <button className={`${styles.pageNumber} ${styles.activePage}`}>
-                            {page}
-                        </button>
+                        </div>
 
                         <button
-                            className={`${styles.pageNumber} ${styles.fadedPage}`}
+                            className={styles.navBtn}
                             onClick={() => updateFilter({ page: page + 1 })}
+                            disabled={results.length < 20} // tmdb/mal typically return 20 items per page
                         >
-                            {page + 1}
+                            Next
                         </button>
                     </div>
-
-                    <button
-                        className={styles.navBtn}
-                        onClick={() => updateFilter({ page: page + 1 })}
-                        disabled={results.length === 0}
-                    >
-                        Next
-                    </button>
-                </div>
+                )}
             </section>
         </div >
     );

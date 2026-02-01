@@ -81,3 +81,23 @@ model ProviderMapping {
   @@index([tmdbId, provider])
   @@index([malId, provider])
 }
+
+model Playlist {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  items       PlaylistItem[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PlaylistItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  playlistId  String   @db.ObjectId
+  playlist    Playlist @relation(fields: [playlistId], references: [id])
+  tmdbId      Int?
+  malId       Int?
+  type        String   // "movie", "tv", "anime"
+  title       String
+  posterPath  String?
+}

@@ -161,6 +161,108 @@
     transform: scale(1.1);
 }
 
+.aiButton {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 1.2rem;
+    border-radius: 24px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-right: 1rem;
+    font-size: 0.85rem;
+    border: 1.5px solid transparent;
+}
+
+/* Dark Mode Styles - Deep Indigo/Purple AI Vibe */
+:global([data-theme='dark']) .aiButton {
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: white;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+:global([data-theme='dark']) .aiButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+    filter: brightness(1.2);
+}
+
+/* Light Mode Styles - Soft Azure/Violet Gradient */
+:global([data-theme='light']) .aiButton {
+    background: linear-gradient(135deg, #f0f4ff, #faf5ff);
+    color: #4f46e5;
+    border: 1.5px solid rgba(79, 70, 229, 0.2);
+    box-shadow: 0 2px 10px rgba(79, 70, 229, 0.1);
+}
+
+:global([data-theme='light']) .aiButton:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, #e0e7ff, #f3e8ff);
+    border-color: #4f46e5;
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2);
+}
+
+.aiLogo {
+    transition: transform 0.3s ease;
+}
+
+.aiButton:hover .aiLogo {
+    animation: sparkle 1.5s infinite;
+}
+
+@keyframes sparkle {
+    0% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.2) rotate(15deg);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+.mobileAiButton {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-top: 0.5rem;
+    border: 1px solid transparent;
+}
+
+:global([data-theme='dark']) .mobileAiButton {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+    color: #a855f7;
+    border-color: rgba(168, 85, 247, 0.2);
+}
+
+:global([data-theme='light']) .mobileAiButton {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(168, 85, 247, 0.05));
+    color: #4f46e5;
+    border-color: rgba(79, 70, 229, 0.1);
+}
+
+.mobileAiButton:hover {
+    transform: scale(1.02);
+    filter: brightness(1.1);
+}
+
+.mobileAiButton .aiLogo {
+    animation: sparkle 2s infinite;
+}
+
 /* Mobile Menu Button */
 .hamburger {
     display: none;
@@ -199,6 +301,10 @@
 
     .themeToggle {
         display: none;
+    }
+
+    .aiButton {
+        display: none !important;
     }
 
     /* Mobile Theme Toggle */

@@ -11,6 +11,8 @@ import { StreamsModule } from './streams/streams.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { MALModule } from './mal/mal.module';
 import { AnimesModule } from './animes/animes.module';
+import { AiModule } from './ai/ai.module';
+import { PlaylistsModule } from './playlists/playlists.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { AnimesModule } from './animes/animes.module';
     StreamsModule,
     PrismaModule,
     AnimesModule,
+    AiModule,
+    PlaylistsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,9 +1,8 @@
-
+# Docs 
 
 https://github.com/AdvithGopinath/LetMeWatch/issues/4
 
 https://www.reddit.com/r/learnprogramming/comments/1esy7m7/is_there_an_apisome_kind_of_site_where_i_can/
-
 
 https://github.com/public-apis/public-apis
 
@@ -45,3 +44,12 @@ https://gogoanime.by/?s=naruto
 https://gogoanime.by/?s=naruto+shippuuden
 
 https://gogoanime.by/?s=Sousou+no+Frieren+2nd+Season
+
+
+add a feature where users can ask AI to generate movie playlists for them. The button the would use Gemini's logo(with a text saying Ask AI..) can be placed in the header and once the user clicks on it a text box pops with placholder text "What type of movies do you like?", the user decribes the type of playlists they want or the type of movies they like and that infomartion is been used by an agent to generate a recomendation playlist which is save in the databse and also sent to the user.
+
+when in black theme the Ask Ai... button should be white or red from the theme colors.
+
+add another feature where users can share their watchlists with their friends and also see their friends watchlists. 
+
+add another feature called popcorn where users can watch a movie or a show with their friends in real time. 
