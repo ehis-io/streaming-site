@@ -39,11 +39,15 @@ export class StreamsGateway implements OnGatewayConnection, OnGatewayDisconnect 
     ) {
         this.logger.log(`Prefetch started via WS for ${data.items.length} items`);
 
-        await this.providersService.prefetchLinks(data.items, (id, link) => {
-            client.emit('prefetch-link', { id, link });
-        });
-
-        client.emit('prefetch-complete', { success: true });
+        try {
+            await this.providersService.prefetchLinks(data.items, (id, link) => {
+                client.emit('prefetch-link', { id, link });
+            });
+            client.emit('prefetch-complete', { success: true });
+        } catch (err) {
+            this.logger.error(`WS Prefetch failed: ${err.message}`);
+            client.emit('prefetch-complete', { success: false, error: err.message });
+        }
     }
 
     @SubscribeMessage('find-streams')
@@ -53,17 +57,22 @@ export class StreamsGateway implements OnGatewayConnection, OnGatewayDisconnect 
     ) {
         this.logger.log(`Find streams started via WS for ${data.id}`);
 
-        const links = await this.providersService.findStreamLinks(
-            data.id,
-            data.season,
-            data.episode,
-            data.type,
-            data.mediaType,
-            (link) => {
-                client.emit('stream-link', link);
-            },
-        );
+        try {
+            const links = await this.providersService.findStreamLinks(
+                data.id,
+                data.season,
+                data.episode,
+                data.type,
+                data.mediaType,
+                (link) => {
+                    client.emit('stream-link', link);
+                },
+            );
 
-        client.emit('streams-complete', links);
+            client.emit('streams-complete', links);
+        } catch (err) {
+            this.logger.error(`WS find-streams failed: ${err.message}`);
+            client.emit('streams-complete', []);
+        }
     }
 }

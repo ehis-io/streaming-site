@@ -34,6 +34,10 @@ export interface Provider {
 }
 
 export interface StreamLink {
-    provider: string;
     url: string;
+    quality?: string;
+    isM3U8?: boolean;
+    provider?: string;
+    headers?: Record<string, string>;
+    type?: 'sub' | 'dub';
 }
