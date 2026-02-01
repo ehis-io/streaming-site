@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
+const withSerwist = require("@serwist/next").default({
+  swSrc: "src/app/sw.ts",
+  swDest: "public/sw.js",
+  disable: process.env.NODE_ENV === "development",
+});
+
 const nextConfig: NextConfig = {
+  /* config options here */
   images: {
     remotePatterns: [
       {
@@ -9,10 +16,10 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'via.placeholder.com',
+        hostname: 'cdn.myanimelist.net',
       },
     ],
   },
 };
 
-export default nextConfig;
+export default withSerwist(nextConfig);

@@ -12,11 +12,11 @@
 - [x] **Mobile Responsiveness**: Implemented responsive grids, hamburger menu, compact cards, and optimized player/discover layouts for mobile.
 - [x] **Theme Toggle**: Added Light/Dark mode toggle with localStorage persistence in header (desktop) and mobile menu.
 - [ ] **Skeleton Loading**: Replace the spinner with Skeleton loaders for a smoother perceived performance during data fetching.
-- [ ] **Error Boundaries**: Implement React Error Boundaries to gracefully handle crashes in specific components.
+- [x] **Error Boundaries**: Implement React Error Boundaries to gracefully handle crashes in specific components.
 
 ### Technical
 - [ ] **SEO Optimization**: Add `next-seo` or dedicated metadata headers (OpenGraph, Twitter cards) for better social sharing.
-- [ ] **PWA Support**: Convert the site into a Progressive Web App for installability.
+- [x] **PWA Support**: Convert the site into a Progressive Web App for installability.
 - [ ] **Unit Tests**: Add tests for critical helpers and components using Jest/React Testing Library.
 
 ---
